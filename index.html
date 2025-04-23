@@ -7,28 +7,27 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" data-bs-theme="dark">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        /* 전체 컨테이너 상하 패딩 축소 */
+        body { font-size: 0.95rem; }
+        /* 전체 컨테이너 상하 패딩 최소화 */
         .container {
-             padding-top: 1rem; /* py-2 equivalent */
-             padding-bottom: 1rem; /* py-2 equivalent */
+             padding-top: 0.5rem; /* py-1 equivalent */
+             padding-bottom: 0.5rem; /* py-1 equivalent */
         }
         /* 오류 메시지 스타일 */
         .error {
-            font-size: 0.8em;
-            margin-top: 0.25rem;
-            min-height: 1em; /* 최소 높이 축소 */
-            display: block; /* 항상 공간 차지하도록 */
+            font-size: 0.75em; /* 폰트 더 줄임 */
+            margin-top: 0.1rem;
+            min-height: 0.9em; /* 최소 높이 더 줄임 */
+            display: block;
         }
-        /* 입력 그룹 기본 설정 */
-        .input-group {
-            flex-wrap: nowrap;
-        }
-        .input-group .form-control {
-            min-width: 60px; /* 최소 너비 약간 축소 */
-            flex: 1 1 auto;
+        /* 입력 그룹 (작은 크기 기본 사용) */
+        .input-group-sm .form-control-sm {
+            min-width: 55px; /* 최소 너비 */
         }
         .input-group .input-group-text {
             white-space: nowrap;
+            font-size: 0.8em; /* 단위 텍스트 크기 줄임 */
+            padding: 0.25rem 0.4rem; /* 패딩 조정 */
         }
         /* = 구분자 스타일 */
         .equals-separator {
@@ -37,72 +36,82 @@
             justify-content: center;
             color: var(--bs-secondary-color);
             font-weight: bold;
-            padding: 0 0.25rem;
+            padding: 0 0.15rem; /* 패딩 약간 줄임 */
             height: 100%;
         }
 
         /* 결과 섹션 */
         .result-section {
-            padding: 0.75rem !important; /* p-2 equivalent */
+            padding: 0.5rem !important; /* p-1 equivalent */
         }
         .result-item {
-            padding: 0.25rem; /* 패딩 축소 */
+            padding: 0.1rem 0.25rem; /* 패딩 더 줄임 */
         }
         .result-header {
-            font-size: 0.85rem; /* 폰트 약간 축소 */
+            font-size: 0.75rem; /* 폰트 더 줄임 */
             color: var(--bs-secondary-color);
-            margin-bottom: 0.1rem; /* 마진 축소 */
+            margin-bottom: 0; /* 마진 제거 */
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             white-space: nowrap;
-            line-height: 1.1; /* 라인 높이 축소 */
+            line-height: 1.1;
         }
         .result-value {
-            min-height: 2rem; /* 최소 높이 축소 */
+            min-height: 1.7rem; /* 최소 높이 더 줄임 */
             display: flex;
             align-items: center;
             justify-content: center;
             word-break: keep-all;
             overflow-wrap: break-word;
-            font-size: 1.1rem; /* 폰트 약간 축소 */
+            font-size: 1rem; /* 폰트 더 줄임 */
+            font-weight: 500; /* 약간 강조 */
         }
         /* 진행 바 */
         .progress {
-            height: 1.25rem; /* 높이 약간 축소 */
-            margin-top: 0.75rem; /* mt-2 equivalent */
+            height: 1rem; /* 높이 더 줄임 */
+            margin-top: 0.5rem; /* mt-1 equivalent */
             background-color: var(--bs-secondary-bg);
+            font-size: 0.7em; /* 내부 텍스트 크기 */
         }
         .progress-bar {
             transition: width 0.3s ease-in-out;
         }
-        /* 카드 및 내부 요소 간격 축소 */
+        /* 카드 및 내부 요소 간격 최소화 */
         .card {
-            margin-bottom: 1rem !important; /* mb-3 equivalent */
+            margin-bottom: 0.75rem !important; /* mb-2 equivalent */
+        }
+        .card .card-header {
+            padding: 0.3rem 0.5rem; /* 헤더 패딩 줄임 */
+            font-size: 0.9rem;
         }
         .card .card-body {
-            padding: 0.75rem; /* p-2 equivalent */
+            padding: 0.5rem; /* p-1 equivalent */
         }
-        .card .card-body .mb-3 {
-             margin-bottom: 0.75rem !important; /* mb-2 equivalent */
+        .card .card-body .mb-1 { /* 내부 마진 mb-1 사용 */
+             margin-bottom: 0.25rem !important; /* mb-1 equivalent */
         }
-         /* 라벨 하단 마진 축소 */
+         /* 라벨 */
         .form-label {
-            margin-bottom: 0.25rem; /* mb-1 equivalent */
+            margin-bottom: 0.1rem; /* 라벨 마진 최소화 */
+            font-size: 0.8em; /* 라벨 폰트 크기 줄임 */
+            font-weight: 500;
+            display: block; /* 줄바꿈 보장 */
+            white-space: nowrap; /* 라벨 자체 줄바꿈 방지 */
         }
+        /* 체크박스 라벨 */
+        .form-check-label {
+             font-size: 0.85em;
+        }
+        .form-check { margin-bottom: 0 !important; }
 
         /* 줄바꿈 방지 스타일 */
         .no-wrap-row {
             flex-wrap: nowrap !important;
-            /* 필요한 경우 가로 스크롤을 위한 부모 요소 설정 고려 */
-             /* overflow-x: auto; */
         }
-        /* 줄바꿈 방지 시 컬럼 너비 자동 조절 */
         .no-wrap-row > [class*="col"] {
-            flex-shrink: 0; /* 컬럼 너비 줄어들지 않게 */
-            /* 필요 시 min-width 설정 */
-             /* min-width: 100px; */
+            flex-shrink: 0; /* 컬럼 너비 자동 축소 방지 */
         }
 
         /* 실제 속도 출력 필드 스타일 */
@@ -113,29 +122,19 @@
              cursor: not-allowed;
         }
 
-        /* 매우 작은 화면 반응형 조정 */
-        @media (max-width: 400px) {
-            .result-header { font-size: 0.8rem; }
-            .result-value { font-size: 1rem; min-height: 1.8rem;}
-            .result-item { padding: 0.15rem; }
-            .input-group .form-control { min-width: 50px; }
-             /* 줄바꿈 방지 해제 및 간격 조정 등 추가 필요 시 여기에 */
-        }
-        /* 576px 미만에서 speed/efficiency 줄 처리 (이제 줄바꿈 안함) */
-        /* @media (max-width: 576px) { ... } */
-
     </style>
 </head>
 <body>
-    <div class="container py-2">
-        <div class="mb-3 text-center">
-            <h1><i class="bi bi-ev-station-fill me-2"></i>배터리 충전 정보</h1>
+    <div class="container py-1">
+        <div class="mb-2 text-center">
+            <h1 style="font-size: 1.8rem;"><i class="bi bi-ev-station-fill me-2"></i>배터리 충전 정보</h1>
         </div>
 
-        <div class="mb-3 p-2 border rounded shadow-sm bg-body-tertiary result-section">
-            <h5 class="text-center mb-2 border-bottom pb-2"> <i class="bi bi-check-circle-fill me-2 text-success"></i>예상 결과
+        <div class="mb-2 p-1 border rounded shadow-sm bg-body-tertiary result-section">
+            <h5 class="text-center mb-1 border-bottom pb-1" style="font-size: 1rem;">
+                <i class="bi bi-check-circle-fill me-2 text-success"></i>예상 결과
             </h5>
-            <div class="row text-center result-grid g-2 no-wrap-row">
+            <div class="row text-center result-grid g-1 no-wrap-row">
                 <div class="col result-item">
                     <div class="result-header">
                         <i class="bi bi-hourglass-split me-1"></i> 소요시간
@@ -155,94 +154,90 @@
                     <div class="result-value" id="remainingUntilEndTime">-</div>
                 </div>
             </div>
-            <div class="progress mt-2" role="progressbar" aria-label="현재 배터리 충전 상태" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress mt-1" role="progressbar" aria-label="현재 배터리 충전 상태" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                 <div class="progress-bar bg-success overflow-visible text-dark fw-bold" id="chargeProgress" style="width: 0%;">
                     <span id="progressText" class="visually-hidden">0%</span>
                 </div>
             </div>
         </div>
 
-        <div class="card mb-3 shadow-sm">
+        <div class="card mb-2 shadow-sm">
             <div class="card-header">
-                <h5><i class="bi bi-battery-half me-2"></i>배터리 정보</h5>
+                <h6><i class="bi bi-battery-half me-2"></i>배터리 정보</h6>
             </div>
-            <div class="card-body p-2">
-                <div class="mb-2"> <label for="batteryCapacity" class="form-label">배터리 총 용량 :</label>
-                    <div class="input-group">
-                        <input type="number" class="form-control" id="batteryCapacity" min="0" step="0.01" value="84" required aria-label="배터리 총 용량 (kWh)">
+            <div class="card-body p-1">
+                <div class="mb-1"> <label for="batteryCapacity" class="form-label">배터리 총 용량 :</label> <div class="input-group input-group-sm">
+                        <input type="number" class="form-control form-control-sm" id="batteryCapacity" min="0" step="0.01" value="84" required aria-label="배터리 총 용량 (kWh)">
                         <span class="input-group-text">kWh</span>
                     </div>
                     <div id="batteryCapacityError" class="error text-danger" aria-live="polite"></div>
                 </div>
-                <div class="mb-2"> <label class="form-label">현재 배터리 :</label>
-                    <div class="row g-2 align-items-center no-wrap-row">
-                        <div class="col"><div class="input-group"><input type="number" class="form-control" id="remainPercent" min="0" max="100" step="0.01" required aria-label="현재 배터리 (%)"><span class="input-group-text">%</span></div></div>
-                        <div class="col-auto"><span class="equals-separator">=</span></div>
-                        <div class="col"><div class="input-group"><input type="number" class="form-control" id="remainKWh" min="0" step="0.01" required aria-label="현재 배터리 (kWh)"><span class="input-group-text">kWh</span></div></div>
+                <div class="mb-1"> <label class="form-label">현재 배터리 :</label> <div class="row g-1 align-items-center no-wrap-row">
+                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="remainPercent" min="0" max="100" step="0.01" required aria-label="현재 배터리 (%)"><span class="input-group-text">%</span></div></div>
+                        <div class="col-auto px-1"><span class="equals-separator">=</span></div>
+                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="remainKWh" min="0" step="0.01" required aria-label="현재 배터리 (kWh)"><span class="input-group-text">kWh</span></div></div>
                     </div>
                     <div id="remainError" class="error text-danger" aria-live="polite"></div>
                 </div>
-                <div class="mb-0"> <label class="form-label">충전 목표 :</label>
-                     <div class="row g-2 align-items-center no-wrap-row">
-                        <div class="col"><div class="input-group"><input type="number" class="form-control" id="targetPercent" min="0" max="100" step="0.01" required aria-label="충전 목표 (%)"><span class="input-group-text">%</span></div></div>
-                        <div class="col-auto"><span class="equals-separator">=</span></div>
-                        <div class="col"><div class="input-group"><input type="number" class="form-control" id="targetKWh" min="0" step="0.01" required aria-label="충전 목표 (kWh)"><span class="input-group-text">kWh</span></div></div>
+                <div class="mb-0"> <label class="form-label">충전 목표 :</label> <div class="row g-1 align-items-center no-wrap-row">
+                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="targetPercent" min="0" max="100" step="0.01" required aria-label="충전 목표 (%)"><span class="input-group-text">%</span></div></div>
+                        <div class="col-auto px-1"><span class="equals-separator">=</span></div>
+                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="targetKWh" min="0" step="0.01" required aria-label="충전 목표 (kWh)"><span class="input-group-text">kWh</span></div></div>
                     </div>
-                     <div id="targetError" class="error text-danger" aria-live="polite"></div>
+                    <div id="targetError" class="error text-danger" aria-live="polite"></div>
                 </div>
             </div>
         </div>
 
-        <div class="card mb-3 shadow-sm">
+        <div class="card mb-2 shadow-sm">
             <div class="card-header">
-                <h5><i class="bi bi-speedometer2 me-2"></i>충전 설정</h5>
+                <h6><i class="bi bi-speedometer2 me-2"></i>충전 설정</h6>
             </div>
-            <div class="card-body p-2">
-                <div class="row g-2 mb-2 align-items-start no-wrap-row speed-efficiency-row">
-                    <div class="col"> <label for="chargeSpeed" class="form-label">충전 속도:</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" id="chargeSpeed" min="0" step="0.01" required aria-label="충전 속도 (kW)">
+            <div class="card-body p-1">
+                <div class="row g-1 mb-1 align-items-end no-wrap-row speed-efficiency-row">
+                    <div class="col">
+                        <label for="chargeSpeed" class="form-label">충전 속도 :</label> <div class="input-group input-group-sm">
+                            <input type="number" class="form-control form-control-sm" id="chargeSpeed" min="0" step="0.01" required aria-label="충전 속도 (kW)">
                             <span class="input-group-text">kW</span>
                         </div>
                         <div id="chargeSpeedError" class="error text-danger" aria-live="polite"></div>
                     </div>
-                    <div class="col"> <label for="efficiency" class="form-label">충전 효율:</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" id="efficiency" min="1" max="100" step="0.1" value="90" required aria-label="충전 효율 (%)">
+                    <div class="col">
+                        <label for="efficiency" class="form-label">충전 효율 (%) :</label> <div class="input-group input-group-sm">
+                            <input type="number" class="form-control form-control-sm" id="efficiency" min="1" max="100" step="0.1" value="90" required aria-label="충전 효율 (%)">
                             <span class="input-group-text">%</span>
                         </div>
                         <div id="efficiencyError" class="error text-danger" aria-live="polite"></div>
                     </div>
-                     <div class="col-auto d-flex align-items-center">
-                         <span class="equals-separator">=</span>
+                     <div class="col-auto px-1"> <span class="equals-separator">=</span>
                      </div>
-                    <div class="col"> <label class="form-label">실제 속도:</label>
-                         <div class="input-group">
-                             <input type="text" class="form-control" id="effectiveSpeedOutput" readonly disabled aria-label="실제 충전 속도 (kW)">
+                    <div class="col">
+                         <label class="form-label">실제 속도:</label> <div class="input-group input-group-sm">
+                             <input type="text" class="form-control form-control-sm" id="effectiveSpeedOutput" readonly disabled aria-label="실제 충전 속도 (kW)">
                              <span class="input-group-text">kW</span>
                          </div>
                           <div class="error"></div> </div>
-                </div><div class="mb-2"> <label for="startTime" class="form-label">충전 시작 시간 :</label>
-                    <input type="time" class="form-control" id="startTime" required aria-label="충전 시작 시간 (HH:MM)">
+                </div><div class="mb-1"> <label for="startTime" class="form-label">충전 시작 시간 :</label> <input type="time" class="form-control form-control-sm" id="startTime" required aria-label="충전 시작 시간 (HH:MM)">
                     <div id="startTimeError" class="error text-body-secondary" aria-live="polite"></div>
                 </div>
                 <div class="form-check mb-0">
                     <input class="form-check-input" type="checkbox" id="useCurrentTime" checked>
                     <label class="form-check-label" for="useCurrentTime">
-                        현재 시간 사용 (체크 해제 시 위 시간 적용)
+                        현재 시간 사용
                     </label>
                 </div>
             </div>
         </div>
 
-        <div class="text-center">
-            <button class="btn btn-primary btn-sm me-2" id="calculateBtn"><i class="bi bi-calculator me-1"></i> 계산</button> <button class="btn btn-secondary btn-sm" id="resetBtn"><i class="bi bi-arrow-counterclockwise me-1"></i> 초기화</button> </div>
+        <div class="text-center mb-0">
+            <button class="btn btn-primary btn-sm me-2" id="calculateBtn"><i class="bi bi-calculator me-1"></i> 계산</button>
+            <button class="btn btn-secondary btn-sm" id="resetBtn"><i class="bi bi-arrow-counterclockwise me-1"></i> 초기화</button>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // === JavaScript 로직은 이전과 동일하게 유지 ===
-        // DOM 요소 캐싱
         const elements = {
             batteryCapacity: document.getElementById("batteryCapacity"),
             remainPercent: document.getElementById("remainPercent"),
@@ -273,7 +268,6 @@
         let countdownInterval = null;
         let calculatedEndDate = null;
 
-        // 디바운스 함수
         function debounce(fn, ms) {
             let timeoutId;
             return function(...args) {
@@ -282,13 +276,11 @@
             };
         }
 
-        // 배터리 용량 가져오기
         function getBatteryCapacity() {
             const capacity = parseFloat(elements.batteryCapacity.value);
             return (!isNaN(capacity) && capacity > 0) ? capacity : 0;
         }
 
-        // 입력 유효성 검사
         function validateInputs() {
             let isValid = true;
             Object.keys(elements).forEach(key => {
@@ -310,43 +302,40 @@
             const targetPercent = parseFloat(elements.targetPercent.value);
 
             if (elements.batteryCapacity.value && (isNaN(capacity) || capacity <= 0)) {
-                elements.batteryCapacityError.innerText = "배터리 용량은 0보다 커야 합니다."; isValid = false;
+                elements.batteryCapacityError.innerText = "용량 > 0"; isValid = false;
             }
             if (elements.chargeSpeed.value && (isNaN(speed) || speed <= 0)) {
-                elements.chargeSpeedError.innerText = "충전 속도는 0보다 커야 합니다."; isValid = false;
+                elements.chargeSpeedError.innerText = "속도 > 0"; isValid = false;
             }
             if (elements.efficiency.value && (isNaN(efficiency) || efficiency <= 0 || efficiency > 100)) {
-                elements.efficiencyError.innerText = "충전 효율은 1~100% 사이여야 합니다."; isValid = false;
+                elements.efficiencyError.innerText = "효율 1~100%"; isValid = false;
             }
             if (elements.remainKWh.value && (isNaN(remainKWh) || remainKWh < 0 || (capacity > 0 && remainKWh > capacity))) {
-                elements.remainError.innerText = "남은 용량(kWh)은 0과 배터리 용량 사이여야 합니다."; isValid = false;
+                elements.remainError.innerText = `kWh 0~${capacity || '?'}`; isValid = false;
             } else if (elements.remainPercent.value && (isNaN(remainPercent) || remainPercent < 0 || remainPercent > 100)) {
-                elements.remainError.innerText = "남은 용량(%)은 0~100 사이여야 합니다."; isValid = false;
+                elements.remainError.innerText = "% 0~100"; isValid = false;
             }
             if (elements.targetKWh.value && (isNaN(targetKWh) || targetKWh < 0 || (capacity > 0 && targetKWh > capacity))) {
-                elements.targetError.innerText = "목표 용량(kWh)은 0과 배터리 용량 사이여야 합니다."; isValid = false;
+                elements.targetError.innerText = `kWh 0~${capacity || '?'}`; isValid = false;
             } else if (elements.targetPercent.value && (isNaN(targetPercent) || targetPercent < 0 || targetPercent > 100)) {
-                elements.targetError.innerText = "목표 용량(%)은 0~100 사이여야 합니다."; isValid = false;
+                elements.targetError.innerText = "% 0~100"; isValid = false;
             }
             if (!isNaN(remainKWh) && !isNaN(targetKWh) && remainKWh >= targetKWh && (elements.remainKWh.value || elements.targetKWh.value)) {
-                 if (!elements.targetError.innerText) elements.targetError.innerText = "충전 목표 용량은 남은 용량보다 커야 합니다."; isValid = false;
+                 if (!elements.targetError.innerText) elements.targetError.innerText = "목표 > 현재"; isValid = false;
             }
 
             return isValid;
         }
 
-        // %를 kWh로 변환
         function percentToKWh(percent) {
             const cap = getBatteryCapacity();
             return (!isNaN(percent) && percent >= 0 && percent <= 100 && cap > 0) ? (cap * percent / 100).toFixed(2) : '';
         }
-        // kWh를 %로 변환
         function kWhToPercent(kwh) {
             const cap = getBatteryCapacity();
             return (!isNaN(kwh) && kwh >= 0 && cap > 0 && kwh <= cap) ? (kwh / cap * 100).toFixed(2) : '';
         }
 
-        // % 또는 kWh 값 변경 시 다른 값 자동 업데이트
         function updateLinkedValue(sourceInput, targetInput, calculateFunc) {
             if (isUpdating) return;
             isUpdating = true;
@@ -356,13 +345,11 @@
             isUpdating = false;
         }
 
-        // 입력 처리 함수 (Debounced 리스너에 연결됨)
         function handleRemainPercentChange() { updateLinkedValue(elements.remainPercent, elements.remainKWh, percentToKWh); updateTimeDebounced(); }
         function handleRemainKWhChange() { updateLinkedValue(elements.remainKWh, elements.remainPercent, kWhToPercent); updateTimeDebounced(); }
         function handleTargetPercentChange() { updateLinkedValue(elements.targetPercent, elements.targetKWh, percentToKWh); updateTimeDebounced(); }
         function handleTargetKWhChange() { updateLinkedValue(elements.targetKWh, elements.targetPercent, kWhToPercent); updateTimeDebounced(); }
 
-        // 진행 바 업데이트
         function updateProgress() {
             let currentPercent = 0;
             const capacity = getBatteryCapacity();
@@ -375,10 +362,15 @@
              const progressRounded = currentPercent.toFixed(1);
              elements.chargeProgress.style.width = `${progressRounded}%`;
              elements.chargeProgress.setAttribute('aria-valuenow', progressRounded);
-             elements.progressText.textContent = `${progressRounded}%`;
+             if(currentPercent > 15) {
+                 elements.chargeProgress.textContent = `${progressRounded}%`;
+                 elements.progressText.textContent = "";
+             } else {
+                 elements.chargeProgress.textContent = "";
+                 elements.progressText.textContent = `${progressRounded}%`;
+             }
         }
 
-        // 실제 충전 속도 계산 및 표시
         function updateEffectiveSpeed() {
             const speed = parseFloat(elements.chargeSpeed.value);
             const efficiencyPercent = parseFloat(elements.efficiency.value);
@@ -390,7 +382,6 @@
             elements.effectiveSpeedOutput.value = effectiveSpeedText;
         }
 
-        // 남은 시간 카운트다운 업데이트
         function updateCountdown() {
             if (countdownInterval) {
                  cancelAnimationFrame(countdownInterval);
@@ -432,7 +423,6 @@
             }
         }
 
-        // 시간 계산 및 표시 (메인 계산 로직)
         function updateTime() {
             elements.estimatedTime.textContent = '-';
             elements.endTime.textContent = '-';
@@ -460,7 +450,7 @@
             if (isNaN(targetKWhVal) || isNaN(remainKWhVal) || isNaN(speed) || speed <= 0 || isNaN(efficiencyPercent) || targetKWhVal <= remainKWhVal) {
                 if (!startTimeValue && !isNaN(targetKWhVal) && !isNaN(remainKWhVal) && !isNaN(speed) && speed > 0 && !isNaN(efficiencyPercent) && targetKWhVal > remainKWhVal) {
                      if (!elements.startTimeError.innerText.includes("입력하면")) {
-                        elements.startTimeError.innerText = "시작 시간을 입력하면 완료 시간이 계산됩니다.";
+                        elements.startTimeError.innerText = "시작 시간 입력 시 완료 시간 계산";
                         elements.startTimeError.classList.remove("text-danger");
                         elements.startTimeError.classList.add("text-body-secondary");
                      }
@@ -497,7 +487,7 @@
 
                         if (daysDiff > 0) {
                             const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"];
-                            endTimeString += ` (+${daysDiff}일, ${daysOfWeek[calculatedEndDate.getDay()]}요일)`;
+                            endTimeString += ` (+${daysDiff}일, ${daysOfWeek[calculatedEndDate.getDay()]})`;
                         }
 
                         elements.endTime.textContent = endTimeString;
@@ -509,7 +499,7 @@
 
                     } catch (e) {
                         console.error("Error calculating end time:", e);
-                        elements.startTimeError.innerText = "완료 시간 계산 중 오류 발생.";
+                        elements.startTimeError.innerText = "완료 시간 계산 오류";
                         elements.startTimeError.classList.add("text-danger");
                         elements.startTimeError.classList.remove("text-body-secondary");
                         elements.endTime.textContent = '-';
@@ -523,7 +513,7 @@
                     calculatedEndDate = null;
                     if (countdownInterval) { cancelAnimationFrame(countdownInterval); clearTimeout(countdownInterval); countdownInterval = null;}
                     if (!elements.startTimeError.classList.contains('text-danger') && !elements.startTimeError.innerText.includes("입력하면")) {
-                         elements.startTimeError.innerText = "시작 시간을 입력하면 완료 시간이 계산됩니다.";
+                         elements.startTimeError.innerText = "시작 시간 입력 시 완료 시간 계산";
                          elements.startTimeError.classList.remove("text-danger");
                          elements.startTimeError.classList.add("text-body-secondary");
                     }
@@ -538,10 +528,8 @@
             updateProgress();
         }
 
-        // 디바운스된 updateTime 함수
         const updateTimeDebounced = debounce(updateTime, 300);
 
-        // 전체 값 업데이트 (주로 용량 변경 시 사용)
         function updateAll() {
             const cap = getBatteryCapacity();
              if (elements.remainPercent.value !== '') {
@@ -567,10 +555,9 @@
                  elements.targetPercent.value = kWhToPercent(kwh);
              }
             validateInputs();
-            updateTime(); // Calls updateEffectiveSpeed internally
+            updateTime();
         }
 
-        // 초기화 함수
         function resetForm() {
             elements.batteryCapacity.value = "84";
             elements.remainPercent.value = "";
@@ -588,17 +575,16 @@
             elements.estimatedTime.textContent = '-';
             elements.endTime.textContent = '-';
             elements.remainingUntilEndTime.textContent = '-';
-            elements.effectiveSpeedOutput.value = "-"; // Reset effective speed display
+            elements.effectiveSpeedOutput.value = "-";
 
             calculatedEndDate = null;
             if (countdownInterval) { cancelAnimationFrame(countdownInterval); clearTimeout(countdownInterval); countdownInterval = null;}
 
-            handleUseCurrentTimeChange(); // 시작 시간 필드 업데이트
-            updateProgress(); // 진행 바 초기화
-            updateEffectiveSpeed(); // 실제 속도 표시 초기화
+            handleUseCurrentTimeChange();
+            updateProgress();
+            updateEffectiveSpeed();
         }
 
-        // 현재 시간 사용 체크박스 변경 처리
         function handleUseCurrentTimeChange() {
             if (elements.useCurrentTime.checked) {
                  elements.startTime.disabled = true;
@@ -606,34 +592,30 @@
                  elements.startTime.value = now.toLocaleTimeString('ko-KR', {
                      hour: '2-digit',
                      minute: '2-digit',
-                     hour12: false // 24시간제
+                     hour12: false
                  });
             } else {
                  elements.startTime.disabled = false;
             }
-            updateTime(); // 체크박스 변경 시 시간 즉시 재계산
+            updateTime();
         }
 
-        // --- 이벤트 리스너 설정 ---
         elements.batteryCapacity.addEventListener('input', debounce(updateAll, 300));
         elements.remainPercent.addEventListener('input', debounce(handleRemainPercentChange, 300));
         elements.remainKWh.addEventListener('input', debounce(handleRemainKWhChange, 300));
         elements.targetPercent.addEventListener('input', debounce(handleTargetPercentChange, 300));
         elements.targetKWh.addEventListener('input', debounce(handleTargetKWhChange, 300));
-        // Speed/Efficiency listeners call updateTime directly which calls updateEffectiveSpeed
         elements.chargeSpeed.addEventListener('input', updateTimeDebounced);
         elements.efficiency.addEventListener('input', updateTimeDebounced);
-        // Start time listener calls updateTime directly
         elements.startTime.addEventListener('input', updateTime);
         elements.useCurrentTime.addEventListener('change', handleUseCurrentTimeChange);
 
         elements.calculateBtn.addEventListener('click', updateTime);
         elements.resetBtn.addEventListener('click', resetForm);
 
-        // --- 초기 로드 설정 ---
         window.onload = () => {
-            handleUseCurrentTimeChange(); // 시작 시간 설정/업데이트
-            updateAll(); // 나머지 값 업데이트 및 초기 계산
+            handleUseCurrentTimeChange();
+            updateAll();
         };
     </script>
 </body>
