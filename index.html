@@ -21,26 +21,61 @@
         .input-group .input-group-text {
             white-space: nowrap;
         }
-        .form-control-lg[readonly] {
-            background-color: var(--bs-tertiary-bg);
-            opacity: 1;
-        }
         .equals-separator {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100%;
             color: var(--bs-secondary-color);
             font-weight: bold;
+            padding: 0 0.25rem;
+        }
+        .result-section { }
+        .result-item {
+            padding: 0.5rem;
+        }
+        .result-header {
+            font-size: 0.9rem;
+            color: var(--bs-secondary-color);
+            margin-bottom: 0.25rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+        .result-value {
+            min-height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+        .progress {
+            height: 1.5rem;
+        }
+        @media (max-width: 400px) {
+            .result-header {
+                font-size: 0.8rem;
+            }
+            .result-value {
+                font-size: 1.1rem;
+                min-height: 2rem;
+            }
+            .result-item {
+                padding: 0.25rem;
+            }
+            .container.result-section.p-3 {
+                padding: 0.5rem !important;
+            }
+            .input-group .form-control {
+                min-width: 55px;
+            }
         }
         @media (max-width: 576px) {
-             .equals-separator { display: none; }
-             .row > [class^="col-"] { margin-bottom: 0.5rem; }
-             .row > [class^="col-"]:last-child { margin-bottom: 0; }
-        }
-        #remainingUntilEndTime {
-            font-style: italic;
-            color: var(--bs-primary);
+            .row > [class^="col-"].mb-3 .row.g-2 { margin-bottom: 0.5rem; }
+            .row > [class^="col-"].mb-3 .row.g-2:last-child { margin-bottom: 0; }
         }
     </style>
 </head>
@@ -48,6 +83,36 @@
     <div class="container py-4">
         <div class="mb-4 text-center">
             <h1><i class="bi bi-ev-station-fill me-2"></i>배터리 충전 정보</h1>
+        </div>
+
+        <div class="mb-4 p-3 border rounded shadow-sm bg-body-tertiary result-section">
+            <h5 class="text-center mb-3 border-bottom pb-2">
+                <i class="bi bi-check-circle-fill me-2 text-success"></i>예상 결과
+            </h5>
+            <div class="row text-center result-grid g-3">
+                <div class="col result-item">
+                    <div class="result-header">
+                        <i class="bi bi-hourglass-split me-1"></i> 소요시간
+                    </div>
+                    <div class="result-value fs-5 fw-medium" id="estimatedTime">-</div>
+                </div>
+                <div class="col result-item border-start border-end">
+                    <div class="result-header">
+                        <i class="bi bi scores/score_0.json
+calendar-check me-1"></i> 완료시간
+                    </div>
+                    <div class="result-value fs-5 fw-medium" id="endTime">-</div>
+                </div>
+                <div class="col result-item">
+                    <div class="result-header">
+                        <i class="bi bi-clock-history me-1"></i> 남은시간
+                    </div>
+                    <div class="result-value fs-5 fw-medium" id="remainingUntilEndTime">-</div>
+                </div>
+            </div>
+            <div class="progress mt-3">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" id="chargeProgress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
         </div>
 
         <div class="card mb-4 shadow-sm">
@@ -58,48 +123,28 @@
                 <div class="mb-3">
                     <label for="batteryCapacity" class="form-label">배터리 총 용량 :</label>
                     <div class="input-group">
-                        <input type="number" class="form-control" id="batteryCapacity" min="0" step="0.01" value="84" oninput="updateAll()">
+                        <input type="number" class="form-control" id="batteryCapacity" min="0" step="0.01" value="84" required aria-label="배터리 총 용량 (kWh)">
                         <span class="input-group-text">kWh</span>
                     </div>
-                    <div id="batteryCapacityError" class="error text-danger"></div>
+                    <div id="batteryCapacityError" class="error text-danger" aria-live="polite"></div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">현재 배터리 :</label>
-                    <div class="row g-2">
-                        <div class="col-sm">
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="remainPercent" min="0" max="100" step="0.01" oninput="updateRemainFromPercent()">
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </div>
-                        <div class="col-sm-auto d-none d-sm-block"><span class="equals-separator">=</span></div>
-                        <div class="col-sm">
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="remainKWh" min="0" step="0.01" oninput="updateRemainFromKWh()">
-                                <span class="input-group-text">kWh</span>
-                            </div>
-                        </div>
+                    <div class="row g-2 align-items-center">
+                        <div class="col"><div class="input-group"><input type="number" class="form-control" id="remainPercent" min="0" max="100" step="0.01" value="30" required aria-label="현재 배터리 (%)"><span class="input-group-text">%</span></div></div>
+                        <div class="col-auto"><span class="equals-separator">=</span></div>
+                        <div class="col"><div class="input-group"><input type="number" class="form-control" id="remainKWh" min="0" step="0.01" required aria-label="현재 배터리 (kWh)"><span class="input-group-text">kWh</span></div></div>
                     </div>
-                    <div id="remainError" class="error text-danger mt-1"></div>
+                    <div id="remainError" class="error text-danger mt-1" aria-live="polite"></div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">충전 목표 :</label>
-                    <div class="row g-2">
-                        <div class="col-sm">
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="targetPercent" min="0" max="100" step="0.01" oninput="updateTargetFromPercent()">
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </div>
-                         <div class="col-sm-auto d-none d-sm-block"><span class="equals-separator">=</span></div>
-                        <div class="col-sm">
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="targetKWh" min="0" step="0.01" oninput="updateTargetFromKWh()">
-                                <span class="input-group-text">kWh</span>
-                            </div>
-                        </div>
+                    <div class="row g-2 align-items-center">
+                        <div class="col"><div class="input-group"><input type="number" class="form-control" id="targetPercent" min="0" max="100" step="0.01" value="100" required aria-label="충전 목표 (%)"><span class="input-group-text">%</span></div></div>
+                        <div class="col-auto"><span class="equals-separator">=</span></div>
+                        <div class="col"><div class="input-group"><input type="number" class="form-control" id="targetKWh" min="0" step="0.01" required aria-label="충전 목표 (kWh)"><span class="input-group-text">kWh</span></div></div>
                     </div>
-                    <div id="targetError" class="error text-danger mt-1"></div>
+                    <div id="targetError" class="error text-danger mt-1" aria-live="polite"></div>
                 </div>
             </div>
         </div>
@@ -112,266 +157,451 @@
                 <div class="mb-3">
                     <label for="chargeSpeed" class="form-label">충전 속도 :</label>
                     <div class="input-group">
-                        <input type="number" class="form-control" id="chargeSpeed" min="0" step="0.01" oninput="updateTime()">
+                        <input type="number" class="form-control" id="chargeSpeed" min="0" step="0.01" value="7" required aria-label="충전 속도 (kW)">
                         <span class="input-group-text">kW</span>
                     </div>
-                    <div id="chargeSpeedError" class="error text-danger"></div>
+                    <div id="chargeSpeedError" class="error text-danger" aria-live="polite"></div>
                 </div>
                 <div class="mb-3">
-                    <label for="startTime" class="form-label">충전 시작 시간 (HH:MM 형식):</label>
-                    
-                    <input type="text"
-                           class="form-control"
-                           id="startTime"
-                           inputmode="numeric"
-                           pattern="\d{2}:\d{2}"  /* Basic pattern hint */
-                           maxlength="5"         /* HH:MM */
-                           placeholder="HH:MM (예: 09:30 또는 21:00)"
-                           oninput="updateTime()"> 
-                    <div id="startTimeError" class="error text-body-secondary"></div>
+                    <label for="efficiency" class="form-label">충전 효율 (%) :</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="efficiency" min="1" max="100" step="0.1" value="90" required aria-label="충전 효율 (%)">
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <div id="efficiencyError" class="error text-danger" aria-live="polite"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="startTime" class="form-label">충전 시작 시간 :</label>
+                    <input type="time" class="form-control" id="startTime" value="04:00" required aria-label="충전 시작 시간 (HH:MM)">
+                    <div id="startTimeError" class="error text-body-secondary" aria-live="polite"></div>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="useCurrentTime" checked>
+                    <label class="form-check-label" for="useCurrentTime">
+                        현재 시간 사용
+                    </label>
                 </div>
             </div>
         </div>
 
-        <div class="card mb-4 shadow-sm bg-body-tertiary">
-            <div class="card-header">
-                 <h5><i class="bi bi-check-circle-fill me-2 text-success"></i>예상 결과</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="estimatedTime" class="form-label fw-bold">예상 충전 소요 시간 :</label>
-                    <input type="text" class="form-control form-control-lg" id="estimatedTime" readonly>
-                </div>
-                <div class="mb-3">
-                    <label for="endTime" class="form-label fw-bold">예상 충전 완료 시간 :</label>
-                    <input type="text" class="form-control form-control-lg" id="endTime" readonly>
-                </div>
-                <div class="mb-3">
-                    <label for="remainingUntilEndTime" class="form-label fw-bold">완료까지 남은 시간 :</label>
-                    <input type="text" class="form-control form-control-lg" id="remainingUntilEndTime" readonly placeholder="-">
-                </div>
-            </div>
+        <div class="text-center">
+            <button class="btn btn-primary me-2" id="calculateBtn"><i class="bi bi-calculator me-1"></i> 계산</button>
+            <button class="btn btn-secondary" id="resetBtn"><i class="bi bi-arrow-counterclockwise me-1"></i> 초기화</button>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- Element References ---
-        const batteryCapacityInput = document.getElementById("batteryCapacity");
-        const remainPercentInput = document.getElementById("remainPercent");
-        const remainKWhInput = document.getElementById("remainKWh");
-        const targetPercentInput = document.getElementById("targetPercent");
-        const targetKWhInput = document.getElementById("targetKWh");
-        const chargeSpeedInput = document.getElementById("chargeSpeed");
-        const startTimeInput = document.getElementById("startTime"); // type="text" for HH:MM
-        const estimatedTimeInput = document.getElementById("estimatedTime");
-        const endTimeInput = document.getElementById("endTime");
-        const remainingUntilEndTimeInput = document.getElementById("remainingUntilEndTime");
-
-        // --- Error Message Element References ---
-        const batteryCapacityError = document.getElementById("batteryCapacityError");
-        const remainError = document.getElementById("remainError");
-        const targetError = document.getElementById("targetError");
-        const chargeSpeedError = document.getElementById("chargeSpeedError");
-        const startTimeError = document.getElementById("startTimeError");
+        // DOM 요소 캐싱
+        const elements = {
+            batteryCapacity: document.getElementById("batteryCapacity"),
+            remainPercent: document.getElementById("remainPercent"),
+            remainKWh: document.getElementById("remainKWh"),
+            targetPercent: document.getElementById("targetPercent"),
+            targetKWh: document.getElementById("targetKWh"),
+            chargeSpeed: document.getElementById("chargeSpeed"),
+            efficiency: document.getElementById("efficiency"),
+            startTime: document.getElementById("startTime"),
+            useCurrentTime: document.getElementById("useCurrentTime"),
+            estimatedTime: document.getElementById("estimatedTime"),
+            endTime: document.getElementById("endTime"),
+            remainingUntilEndTime: document.getElementById("remainingUntilEndTime"),
+            chargeProgress: document.getElementById("chargeProgress"),
+            batteryCapacityError: document.getElementById("batteryCapacityError"),
+            remainError: document.getElementById("remainError"),
+            targetError: document.getElementById("targetError"),
+            chargeSpeedError: document.getElementById("chargeSpeedError"),
+            efficiencyError: document.getElementById("efficiencyError"),
+            startTimeError: document.getElementById("startTimeError"),
+            calculateBtn: document.getElementById("calculateBtn"),
+            resetBtn: document.getElementById("resetBtn")
+        };
 
         let isUpdating = false;
         let countdownInterval = null;
         let calculatedEndDate = null;
 
-        // --- Auto-format startTimeInput to HH:MM ---
-        function formatStartTimeInput() {
-            let value = startTimeInput.value.replace(/[^\d]/g, ""); // Remove non-digits
-            let formattedValue = "";
-
-            if (value.length > 4) {
-                value = value.substring(0, 4); // Limit to 4 digits (HHMM)
-            }
-
-            if (value.length >= 2) {
-                formattedValue = value.substring(0, 2) + ":" + value.substring(2);
-            } else {
-                formattedValue = value;
-            }
-
-            // Prevent exceeding HH:MM format (5 chars total) - redundant with maxlength but safer
-            if (formattedValue.length > 5) {
-                 formattedValue = formattedValue.substring(0, 5);
-            }
-
-            // Only update if the value actually changed to prevent cursor jumps
-            if (startTimeInput.value !== formattedValue) {
-                 startTimeInput.value = formattedValue;
-            }
-             // Trigger time update after formatting potentially changed the value
-             updateTime();
+        // 디바운스 함수
+        function debounce(fn, ms) {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn(...args), ms);
+            };
         }
-        // Add event listener for auto-formatting
-        startTimeInput.addEventListener('input', formatStartTimeInput);
 
+        // 배터리 용량 가져오기
+        function getBatteryCapacity() {
+            const capacity = parseFloat(elements.batteryCapacity.value);
+            return (!isNaN(capacity) && capacity > 0) ? capacity : 0;
+        }
 
-        // --- Validation Function (Checks for HH:MM format) ---
+        // 입력 유효성 검사
         function validateInputs() {
             let isValid = true;
-            batteryCapacityError.innerText = ""; remainError.innerText = ""; targetError.innerText = ""; chargeSpeedError.innerText = "";
-            startTimeError.innerText = ""; startTimeError.classList.remove("text-danger"); startTimeError.classList.add("text-body-secondary");
-
-            const capacity = parseFloat(batteryCapacityInput.value);
-            const remainKWh = parseFloat(remainKWhInput.value); const targetKWh = parseFloat(targetKWhInput.value);
-            const speed = parseFloat(chargeSpeedInput.value);
-            const startTimeValue = startTimeInput.value; // Format HH:MM
-
-            // Validate Battery Capacity & Speed
-            if (batteryCapacityInput.value && (isNaN(capacity) || capacity <= 0)) { batteryCapacityError.innerText = "배터리 용량을 0보다 큰 숫자로 입력해주세요."; isValid = false; }
-            if (chargeSpeedInput.value && (isNaN(speed) || speed <= 0)) { chargeSpeedError.innerText = "충전 속도를 0보다 큰 숫자로 입력해주세요."; isValid = false; }
-
-             // Validate Target > Remain
-            if (!isNaN(remainKWh) && !isNaN(targetKWh) && remainKWh >= targetKWh && (remainKWhInput.value || targetKWhInput.value)) {
-                if (!targetError.innerText) targetError.innerText = "충전 목표 용량은 남은 용량보다 커야 합니다.";
-                 isValid = false;
+            Object.values(elements).forEach(el => {
+                if (el.id.includes("Error")) el.innerText = "";
+            });
+            if (elements.startTimeError.classList.contains('text-danger')) {
+                elements.startTimeError.classList.remove("text-danger");
+                elements.startTimeError.classList.add("text-body-secondary");
             }
 
-            // Validate Remaining/Target Ranges (Non-blocking errors)
-            const remainPercent = parseFloat(remainPercentInput.value); if (remainKWhInput.value && (isNaN(remainKWh) || remainKWh < 0 || (!isNaN(capacity) && capacity > 0 && remainKWh > capacity))) { remainError.innerText = "남은 용량(kWh)을 0과 배터리 용량 사이의 숫자로 입력해주세요."; } else if (remainPercentInput.value && (isNaN(remainPercent) || remainPercent < 0 || remainPercent > 100)) { remainError.innerText = "남은 용량(%)을 0과 100 사이의 숫자로 입력해주세요."; } else { remainError.innerText = ""; }
-            const targetPercent = parseFloat(targetPercentInput.value); if (targetKWhInput.value && (isNaN(targetKWh) || targetKWh < 0 || (!isNaN(capacity) && capacity > 0 && targetKWh > capacity))) { if (!targetError.innerText) targetError.innerText = "목표 용량(kWh)을 0과 배터리 용량 사이의 숫자로 입력해주세요."; } else if (targetPercentInput.value && (isNaN(targetPercent) || targetPercent < 0 || targetPercent > 100)) { if (!targetError.innerText) targetError.innerText = "목표 용량(%)을 0과 100 사이의 숫자로 입력해주세요."; } else { if (!targetError.innerText) targetError.innerText = ""; }
+            const capacity = parseFloat(elements.batteryCapacity.value);
+            const remainKWh = parseFloat(elements.remainKWh.value);
+            const targetKWh = parseFloat(elements.targetKWh.value);
+            const speed = parseFloat(elements.chargeSpeed.value);
+            const efficiency = parseFloat(elements.efficiency.value);
+            const startTime = elements.startTime.value;
+            const remainPercent = parseFloat(elements.remainPercent.value);
+            const targetPercent = parseFloat(elements.targetPercent.value);
 
-            // HH:MM Validation for startTimeValue
-            if (startTimeValue) {
-                if (/^\d{2}:\d{2}$/.test(startTimeValue)) { // Check for HH:MM format
-                    const parts = startTimeValue.split(':');
-                    const hh = parseInt(parts[0], 10);
-                    const mm = parseInt(parts[1], 10);
-                    if (hh < 0 || hh > 23 || mm < 0 || mm > 59) {
-                        startTimeError.innerText = "시간은 00~23, 분은 00~59 사이여야 합니다.";
-                        startTimeError.classList.add("text-danger"); startTimeError.classList.remove("text-body-secondary");
-                        isValid = false;
-                    }
-                } else { // Invalid format
-                    startTimeError.innerText = "유효한 시간 형식(HH:MM)으로 입력해주세요.";
-                    startTimeError.classList.add("text-danger"); startTimeError.classList.remove("text-body-secondary");
-                    isValid = false;
-                }
+            if (elements.batteryCapacity.value && (isNaN(capacity) || capacity <= 0)) {
+                elements.batteryCapacityError.innerText = "배터리 용량은 0보다 커야 합니다.";
+                isValid = false;
             }
+            if (elements.chargeSpeed.value && (isNaN(speed) || speed <= 0)) {
+                elements.chargeSpeedError.innerText = "충전 속도는 0보다 커야 합니다.";
+                isValid = false;
+            }
+            if (elements.efficiency.value && (isNaN(efficiency) || efficiency <= 0 || efficiency > 100)) {
+                elements.efficiencyError.innerText = "충전 효율은 1~100% 사이여야 합니다.";
+                isValid = false;
+            }
+            if (elements.remainKWh.value && (isNaN(remainKWh) || remainKWh < 0 || (capacity > 0 && remainKWh > capacity))) {
+                elements.remainError.innerText = "남은 용량(kWh)은 0과 배터리 용량 사이여야 합니다.";
+                isValid = false;
+            } else if (elements.remainPercent.value && (isNaN(remainPercent) || remainPercent < 0 || remainPercent > 100)) {
+                elements.remainError.innerText = "남은 용량(%)은 0~100 사이여야 합니다.";
+                isValid = false;
+            }
+            if (elements.targetKWh.value && (isNaN(targetKWh) || targetKWh < 0 || (capacity > 0 && targetKWh > capacity))) {
+                elements.targetError.innerText = "목표 용량(kWh)은 0과 배터리 용량 사이여야 합니다.";
+                isValid = false;
+            } else if (elements.targetPercent.value && (isNaN(targetPercent) || targetPercent < 0 || targetPercent > 100)) {
+                elements.targetError.innerText = "목표 용량(%)은 0~100 사이여야 합니다.";
+                isValid = false;
+            }
+            if (!isNaN(remainKWh) && !isNaN(targetKWh) && remainKWh >= targetKWh && (elements.remainKWh.value || elements.targetKWh.value)) {
+                elements.targetError.innerText = "충전 목표 용량은 남은 용량보다 커야 합니다.";
+                isValid = false;
+            }
+            if (startTime && !/^\d{2}:\d{2}$/.test(startTime)) {
+                elements.startTimeError.innerText = "유효한 시간 형식(HH:MM)을 입력하세요.";
+                elements.startTimeError.classList.add("text-danger");
+                elements.startTimeError.classList.remove("text-body-secondary");
+                isValid = false;
+            }
+
             return isValid;
         }
 
-        // --- Helper Function (Unchanged) ---
-        function getBatteryCapacity() { const capacity = parseFloat(batteryCapacityInput.value); return (!isNaN(capacity) && capacity > 0) ? capacity : 0; }
+        // %와 kWh 변환
+        function percentToKWh(percent) {
+            const cap = getBatteryCapacity();
+            return (!isNaN(percent) && percent >= 0 && percent <= 100 && cap > 0) ? (cap * percent / 100).toFixed(2) : '';
+        }
+        function kWhToPercent(kwh) {
+            const cap = getBatteryCapacity();
+            return (!isNaN(kwh) && kwh >= 0 && cap > 0 && kwh <= cap) ? (kwh / cap * 100).toFixed(2) : '';
+        }
 
-        // --- Update Functions for Remaining/Target Capacity (Unchanged) ---
-        function updateRemainFromPercent() { if (isUpdating) return; isUpdating = true; const cap = getBatteryCapacity(); const percent = parseFloat(remainPercentInput.value); remainKWhInput.value = (!isNaN(percent) && percent >= 0 && percent <= 100 && cap > 0)? (Math.round((cap * percent / 100) * 100) / 100).toFixed(2): ''; updateTime(); isUpdating = false; }
-        function updateRemainFromKWh() { if (isUpdating) return; isUpdating = true; const cap = getBatteryCapacity(); const kwh = parseFloat(remainKWhInput.value); remainPercentInput.value = (!isNaN(kwh) && kwh >= 0 && cap > 0 && kwh <= cap)? (Math.round((kwh / cap * 100) * 100) / 100).toFixed(2): ''; updateTime(); isUpdating = false; }
-        function updateTargetFromPercent() { if (isUpdating) return; isUpdating = true; const cap = getBatteryCapacity(); const percent = parseFloat(targetPercentInput.value); targetKWhInput.value = (!isNaN(percent) && percent >= 0 && percent <= 100 && cap > 0)? (Math.round((cap * percent / 100) * 100) / 100).toFixed(2): ''; updateTime(); isUpdating = false; }
-        function updateTargetFromKWh() { if (isUpdating) return; isUpdating = true; const cap = getBatteryCapacity(); const kwh = parseFloat(targetKWhInput.value); targetPercentInput.value = (!isNaN(kwh) && kwh >= 0 && cap > 0 && kwh <= cap)? (Math.round((kwh / cap * 100) * 100) / 100).toFixed(2): ''; updateTime(); isUpdating = false; }
+        // 값 동기화 및 시간 업데이트
+        function updateValueAndTime(sourceInput, targetInput, calculateFunc) {
+            if (isUpdating) return;
+            isUpdating = true;
 
+            const sourceValue = parseFloat(sourceInput.value);
+            targetInput.value = calculateFunc(sourceValue);
+            validateInputs();
+            updateTime();
 
-        // --- Countdown Update Function (Unchanged) ---
+            isUpdating = false;
+        }
+
+        // 입력 처리 함수
+        function updateRemainFromPercent() { updateValueAndTime(elements.remainPercent, elements.remainKWh, percentToKWh); }
+        function updateRemainFromKWh() { updateValueAndTime(elements.remainKWh, elements.remainPercent, kWhToPercent); }
+        function updateTargetFromPercent() { updateValueAndTime(elements.targetPercent, elements.targetKWh, percentToKWh); }
+        function updateTargetFromKWh() { updateValueAndTime(elements.targetKWh, elements.targetPercent, kWhToPercent); }
+
+        // 진행 바 업데이트
+        function updateProgress() {
+            const remainKWh = parseFloat(elements.remainKWh.value);
+            const capacity = getBatteryCapacity();
+            const progress = capacity > 0 ? (remainKWh / capacity * 100).toFixed(2) : 0;
+            elements.chargeProgress.style.width = `${progress}%`;
+            elements.chargeProgress.setAttribute('aria-valuenow', progress);
+        }
+
+        // 남은 시간 카운트다운 업데이트
         function updateCountdown() {
-             if (!calculatedEndDate) { remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-'; if(countdownInterval) clearInterval(countdownInterval); countdownInterval = null; return; }
-            const now = new Date().getTime(); const diffMs = calculatedEndDate.getTime() - now;
-            if (diffMs <= 0) { remainingUntilEndTimeInput.value = '완료됨'; remainingUntilEndTimeInput.placeholder = '완료됨'; if(countdownInterval) clearInterval(countdownInterval); countdownInterval = null;
-            } else {
-                const totalMinutesRemaining = Math.ceil(diffMs / (1000 * 60)); const totalHoursRemaining = Math.floor(totalMinutesRemaining / 60); const daysRemaining = Math.floor(totalHoursRemaining / 24);
-                let remainingStr = "";
-                if (daysRemaining > 0) { const hoursInLastDay = totalHoursRemaining % 24; remainingStr = `${daysRemaining}일 `; if (hoursInLastDay > 0) { remainingStr += `${hoursInLastDay}시간 `; } remainingStr += "남음";
-                } else if (totalHoursRemaining >= 12) { remainingStr = `약 ${totalHoursRemaining}시간 남음`;
-                } else {
-                    const hoursRemaining = totalHoursRemaining; const minutesRemaining = totalMinutesRemaining % 60;
-                    if (hoursRemaining > 0) { remainingStr += `${hoursRemaining}시간 `; }
-                    if (minutesRemaining > 0 || hoursRemaining === 0) { remainingStr += `${minutesRemaining}분 남음`; }
-                    if (remainingStr === "" && diffMs > 0) { remainingStr = "곧 완료"; }
+            if (!calculatedEndDate || isNaN(calculatedEndDate.getTime())) {
+                elements.remainingUntilEndTime.textContent = '-';
+                if (countdownInterval) {
+                    cancelAnimationFrame(countdownInterval);
+                    clearTimeout(countdownInterval);
+                    countdownInterval = null;
                 }
-                remainingUntilEndTimeInput.value = remainingStr; remainingUntilEndTimeInput.placeholder = '';
+                return;
+            }
+
+            const now = new Date();
+            const diffMs = calculatedEndDate.getTime() - now.getTime();
+
+            // 디버깅: 시간 차이 로그
+            console.log(`현재 시간: ${now}, 완료 시간: ${calculatedEndDate}, 차이(ms): ${diffMs}`);
+
+            if (diffMs <= 0) {
+                elements.remainingUntilEndTime.textContent = '완료됨';
+                if (countdownInterval) {
+                    cancelAnimationFrame(countdownInterval);
+                    clearTimeout(countdownInterval);
+                    countdownInterval = null;
+                }
+                return;
+            }
+
+            const totalSeconds = Math.ceil(diffMs / 1000);
+            const days = Math.floor(totalSeconds / (3600 * 24));
+            const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            let display = [];
+            if (days > 0) display.push(`${days}일`);
+            if (hours > 0 || days > 0) display.push(`${hours}시간`);
+            if (minutes > 0 || hours > 0 || days > 0) display.push(`${minutes}분`);
+            if (days === 0 && hours === 0 && minutes === 0) display.push(`${seconds}초`);
+
+            elements.remainingUntilEndTime.textContent = display.join(' ') || '곧 완료';
+
+            if (countdownInterval) {
+                cancelAnimationFrame(countdownInterval);
+                clearTimeout(countdownInterval);
+                countdownInterval = null;
+            }
+
+            if (totalSeconds <= 60) {
+                countdownInterval = requestAnimationFrame(updateCountdown);
+            } else {
+                const secondsUntilNextMinute = seconds === 0 ? 60 : seconds;
+                const timeoutMs = (60 - secondsUntilNextMinute) * 1000;
+                countdownInterval = setTimeout(updateCountdown, timeoutMs);
             }
         }
 
-
-        // --- Update Time Calculation (Parses HH:MM) ---
+        // 시간 계산 및 표시
         function updateTime() {
-            estimatedTimeInput.value = ''; endTimeInput.value = ''; remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-';
-            calculatedEndDate = null; if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
-            // Clear previous error message before validation
-            startTimeError.innerText = ""; startTimeError.classList.remove("text-danger"); startTimeError.classList.add("text-body-secondary");
-
-
-            if (!validateInputs()) { // Run full validation
-                 calculatedEndDate = null; if (countdownInterval) clearInterval(countdownInterval); countdownInterval = null;
-                 estimatedTimeInput.value = ''; endTimeInput.value = '';
-                 remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-';
-                 return; // Stop if validation fails
-             }
-
-            const targetKWhVal = parseFloat(targetKWhInput.value); const remainKWhVal = parseFloat(remainKWhInput.value);
-            const speed = parseFloat(chargeSpeedInput.value);
-            const startTimeValue = startTimeInput.value; // Validated HH:MM string or empty
-
-            if (isNaN(targetKWhVal) || isNaN(remainKWhVal) || isNaN(speed) || speed <= 0 || targetKWhVal <= remainKWhVal) {
-                 if (!startTimeValue && !isNaN(targetKWhVal) && !isNaN(remainKWhVal) && !isNaN(speed) && speed > 0 && targetKWhVal > remainKWhVal) { startTimeError.innerText = "시작 시간을 입력하면 완료 시간이 계산됩니다."; }
-                return; // Stop if essential data missing (should be caught by validation)
+            elements.estimatedTime.textContent = '-';
+            elements.endTime.textContent = '-';
+            elements.remainingUntilEndTime.textContent = '-';
+            calculatedEndDate = null;
+            if (countdownInterval) {
+                cancelAnimationFrame(countdownInterval);
+                clearTimeout(countdownInterval);
+                countdownInterval = null;
             }
 
-            // --- Calculate Duration ---
-            const neededEnergy = targetKWhVal - remainKWhVal; const timeInHours = neededEnergy / speed; const totalMinutesDuration = Math.round(timeInHours * 60);
+            if (!validateInputs()) {
+                updateProgress();
+                return;
+            }
+
+            const targetKWhVal = parseFloat(elements.targetKWh.value);
+            const remainKWhVal = parseFloat(elements.remainKWh.value);
+            const speed = parseFloat(elements.chargeSpeed.value);
+            const efficiency = parseFloat(elements.efficiency.value) / 100;
+            const startTime = elements.startTime.value;
+
+            if (isNaN(targetKWhVal) || isNaN(remainKWhVal) || isNaN(speed) || speed <= 0 || isNaN(efficiency) || targetKWhVal <= remainKWhVal) {
+                if (!startTime && !isNaN(targetKWhVal) && !isNaN(remainKWhVal) && !isNaN(speed) && speed > 0 && targetKWhVal > remainKWhVal) {
+                    elements.startTimeError.innerText = "시작 시간을 입력하면 완료 시간이 계산됩니다.";
+                    elements.startTimeError.classList.remove("text-danger");
+                    elements.startTimeError.classList.add("text-body-secondary");
+                }
+                updateProgress();
+                return;
+            }
+
+            const neededEnergy = targetKWhVal - remainKWhVal;
+            const timeInHours = neededEnergy / (speed * efficiency);
+            const totalMinutesDuration = Math.ceil(timeInHours * 60);
 
             if (totalMinutesDuration >= 0) {
-                const hours = Math.floor(totalMinutesDuration / 60); const minutes = totalMinutesDuration % 60;
-                estimatedTimeInput.value = hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
+                const hours = Math.floor(totalMinutesDuration / 60);
+                const minutes = totalMinutesDuration % 60;
+                elements.estimatedTime.textContent = hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
 
-                // Calculate End Time if Start Time is provided and VALID
-                if (startTimeValue) { // It's already validated to be HH:MM format
+                if (startTime && /^\d{2}:\d{2}$/.test(startTime)) {
                     try {
-                        // Parse the validated HH:MM string
-                        const parts = startTimeValue.split(':');
-                        const startHour = parseInt(parts[0], 10);
-                        const startMinute = parseInt(parts[1], 10);
+                        const [startHour, startMinute] = startTime.split(':').map(Number);
+                        if (startHour < 0 || startHour > 23 || startMinute < 0 || startMinute > 59) throw new Error("Invalid time");
 
-                        if (!isNaN(startHour) && !isNaN(startMinute)) { // Should always be true here
-                            const startDate = new Date(); startDate.setHours(startHour, startMinute, 0, 0);
-                            calculatedEndDate = new Date(startDate.getTime() + totalMinutesDuration * 60 * 1000);
+                        const now = new Date();
+                        const startDate = new Date(now);
+                        startDate.setHours(startHour, startMinute, 0, 0);
 
-                            const endHour = calculatedEndDate.getHours().toString().padStart(2, '0'); const endMinute = calculatedEndDate.getMinutes().toString().padStart(2, '0');
-                            endTimeInput.value = `${endHour}:${endMinute}`;
-                            startTimeError.innerText = ""; // Clear info message
+                        // 과거 시간 처리: 현재 시간 사용 체크박스가 꺼져 있으면 현재 날짜로 유지
+                        if (startDate.getTime() < now.getTime() - 60000 && elements.useCurrentTime.checked) {
+                            startDate.setDate(startDate.getDate() + 1);
+                            console.log(`시작 시간 과거로 감지, 다음 날로 설정: ${startDate}`);
+                        }
 
-                            updateCountdown();
-                            countdownInterval = setInterval(updateCountdown, 60000);
+                        calculatedEndDate = new Date(startDate.getTime() + totalMinutesDuration * 60 * 1000);
 
-                        } else { throw new Error("Failed to parse validated time string."); } // Should not happen
+                        // 완료 시간이 현재 시간보다 과거라면 경고
+                        if (calculatedEndDate.getTime() < now.getTime()) {
+                            elements.startTimeError.innerText = "완료 시간이 현재 시간보다 과거입니다. 시작 시간을 확인하세요.";
+                            elements.startTimeError.classList.add("text-danger");
+                            elements.startTimeError.classList.remove("text-body-secondary");
+                            elements.endTime.textContent = '-';
+                            elements.remainingUntilEndTime.textContent = '-';
+                            calculatedEndDate = null;
+                            return;
+                        }
+
+                        const daysDiff = Math.floor((calculatedEndDate - startDate) / (1000 * 60 * 60 * 24));
+                        let dayIndicator = "";
+                        if (daysDiff > 0) {
+                            const days = ["일", "월", "화", "수", "목", "금", "토"];
+                            dayIndicator = ` (+${daysDiff}일, ${days[calculatedEndDate.getDay()]}요일)`;
+                        }
+
+                        elements.endTime.textContent = calculatedEndDate.toLocaleTimeString('ko-KR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) + dayIndicator;
+
+                        elements.startTimeError.innerText = "";
+                        elements.startTimeError.classList.remove("text-danger");
+                        elements.startTimeError.classList.add("text-body-secondary");
+
+                        updateCountdown();
                     } catch (e) {
-                        console.error("Error calculating end time with parsed HH:MM:", e);
-                        startTimeError.innerText = "완료 시간 계산 중 오류 발생."; startTimeError.classList.add("text-danger"); startTimeError.classList.remove("text-body-secondary");
-                        endTimeInput.value = ''; calculatedEndDate = null; if (countdownInterval) clearInterval(countdownInterval); countdownInterval = null; remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-';
+                        console.error("Error calculating end time:", e);
+                        elements.startTimeError.innerText = "완료 시간 계산 중 오류 발생.";
+                        elements.startTimeError.classList.add("text-danger");
+                        elements.startTimeError.classList.remove("text-body-secondary");
+                        elements.endTime.textContent = '-';
+                        elements.remainingUntilEndTime.textContent = '-';
+                        calculatedEndDate = null;
+                        if (countdownInterval) {
+                            cancelAnimationFrame(countdownInterval);
+                            clearTimeout(countdownInterval);
+                            countdownInterval = null;
+                        }
                     }
                 } else {
-                    // No start time provided
-                    endTimeInput.value = ''; startTimeError.innerText = "시작 시간을 입력하면 완료 시간이 계산됩니다.";
-                     remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-'; calculatedEndDate = null; if (countdownInterval) clearInterval(countdownInterval); countdownInterval = null;
+                    elements.endTime.textContent = '-';
+                    elements.remainingUntilEndTime.textContent = '-';
+                    calculatedEndDate = null;
+                    if (countdownInterval) {
+                        cancelAnimationFrame(countdownInterval);
+                        clearTimeout(countdownInterval);
+                        countdownInterval = null;
+                    }
+                    if (!startTime && !elements.startTimeError.classList.contains('text-danger')) {
+                        elements.startTimeError.innerText = "시작 시간을 입력하면 완료 시간이 계산됩니다.";
+                        elements.startTimeError.classList.remove("text-danger");
+                        elements.startTimeError.classList.add("text-body-secondary");
+                    }
                 }
             } else {
-                estimatedTimeInput.value = '0분'; endTimeInput.value = '';
-                 remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-'; calculatedEndDate = null; if (countdownInterval) clearInterval(countdownInterval); countdownInterval = null;
+                elements.estimatedTime.textContent = '0분';
+                elements.endTime.textContent = '-';
+                elements.remainingUntilEndTime.textContent = '-';
+                calculatedEndDate = null;
+                if (countdownInterval) {
+                    cancelAnimationFrame(countdownInterval);
+                    clearTimeout(countdownInterval);
+                    countdownInterval = null;
+                }
             }
+            updateProgress();
         }
 
-        // --- Update All Function (Unchanged) ---
+        // 전체 업데이트
         function updateAll() {
             const cap = getBatteryCapacity();
-            const remainPercent = parseFloat(remainPercentInput.value); if (!isNaN(remainPercent) && remainPercent >= 0 && remainPercent <= 100 && cap > 0) { remainKWhInput.value = (Math.round((cap * remainPercent / 100) * 100) / 100).toFixed(2); } else if (remainPercentInput.value === '') { if(cap > 0) remainKWhInput.value = ''; }
-            const targetPercent = parseFloat(targetPercentInput.value); if (!isNaN(targetPercent) && targetPercent >= 0 && targetPercent <= 100 && cap > 0) { targetKWhInput.value = (Math.round((cap * targetPercent / 100) * 100) / 100).toFixed(2); } else if (targetPercentInput.value === '') { if(cap > 0) targetKWhInput.value = ''; }
+
+            if (elements.remainPercent.value !== '') {
+                const remainPercent = parseFloat(elements.remainPercent.value);
+                if (!isNaN(remainPercent) && remainPercent >= 0 && remainPercent <= 100 && cap > 0) {
+                    elements.remainKWh.value = (cap * remainPercent / 100).toFixed(2);
+                } else if (elements.remainPercent.value === '') {
+                    if (cap > 0) elements.remainKWh.value = '';
+                }
+            } else if (elements.remainKWh.value !== '') {
+                const kwh = parseFloat(elements.remainKWh.value);
+                elements.remainPercent.value = kWhToPercent(kwh);
+            }
+
+            if (elements.targetPercent.value !== '') {
+                const targetPercent = parseFloat(elements.targetPercent.value);
+                if (!isNaN(targetPercent) && targetPercent >= 0 && targetPercent <= 100 && cap > 0) {
+                    elements.targetKWh.value = (cap * targetPercent / 100).toFixed(2);
+                } else if (elements.targetPercent.value === '') {
+                    if (cap > 0) elements.targetKWh.value = '';
+                }
+            } else if (elements.targetKWh.value !== '') {
+                const kwh = parseFloat(elements.targetKWh.value);
+                elements.targetPercent.value = kWhToPercent(kwh);
+            }
+
+            validateInputs();
             updateTime();
         }
 
-        // --- Initial Load (Sets default HH:MM time) ---
-         window.onload = () => {
-            const now = new Date();
-            const currentHour = now.getHours().toString().padStart(2, '0');
-            const currentMinute = now.getMinutes().toString().padStart(2, '0');
-            // Set default value in HH:MM format if input is empty
-            if (!startTimeInput.value) {
-               startTimeInput.value = `${currentHour}:${currentMinute}`;
+        // 초기화
+        function resetForm() {
+            elements.batteryCapacity.value = "84";
+            elements.remainPercent.value = "";
+            elements.remainKWh.value = "";
+            elements.targetPercent.value = "";
+            elements.targetKWh.value = "";
+            elements.chargeSpeed.value = "";
+            elements.efficiency.value = "90";
+            elements.startTime.value = "";
+            elements.useCurrentTime.checked = true;
+            updateAll();
+        }
+
+        // 이벤트 리스너
+        elements.batteryCapacity.addEventListener('input', debounce(updateAll, 300));
+        elements.remainPercent.addEventListener('input', debounce(updateRemainFromPercent, 300));
+        elements.remainKWh.addEventListener('input', debounce(updateRemainFromKWh, 300));
+        elements.targetPercent.addEventListener('input', debounce(updateTargetFromPercent, 300));
+        elements.targetKWh.addEventListener('input', debounce(updateTargetFromKWh, 300));
+        elements.chargeSpeed.addEventListener('input', debounce(updateTime, 300));
+        elements.efficiency.addEventListener('input', debounce(updateTime, 300));
+        elements.startTime.addEventListener('input', updateTime);
+        elements.useCurrentTime.addEventListener('change', () => {
+            if (elements.useCurrentTime.checked) {
+                const now = new Date();
+                elements.startTime.value = now.toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+                updateTime();
             }
-            updateTime(); // Perform initial calculation
-         };
+        });
+        elements.calculateBtn.addEventListener('click', updateTime);
+        elements.resetBtn.addEventListener('click', resetForm);
+
+        // 초기 로드
+        window.onload = () => {
+            if (elements.useCurrentTime.checked) {
+                const now = new Date();
+                elements.startTime.value = now.toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+            }
+            updateAll();
+        };
     </script>
 </body>
 </html>
