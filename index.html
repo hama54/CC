@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" data-bs-theme="dark">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
+        /* 이전과 동일한 CSS 유지 */
         body { font-size: 0.95rem; }
         .container { padding-top: 0.75rem; padding-bottom: 0.75rem; }
         .error { font-size: 0.75em; margin-top: 0.1rem; min-height: 0.9em; display: block; color: var(--bs-danger-text-emphasis); }
@@ -20,8 +21,8 @@
         .progress { height: 1rem; margin-top: 0.75rem; background-color: var(--bs-secondary-bg); font-size: 0.7em; }
         .progress-bar { transition: width 0.3s ease-in-out; }
         .card { margin-bottom: 1rem !important; }
-        .card .card-header { padding: 0.4rem 0.75rem; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; } /* Flex for header */
-        .card .card-header h6 { margin-bottom: 0; } /* Remove default margin from h6 */
+        .card .card-header { padding: 0.4rem 0.75rem; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; }
+        .card .card-header h6 { margin-bottom: 0; }
         .card .card-body { padding: 0.75rem; }
         .card .card-body .mb-1 { margin-bottom: 0.25rem !important; }
         .card .card-body .mb-2 { margin-bottom: 0.5rem !important; }
@@ -32,18 +33,8 @@
         .no-wrap-row { flex-wrap: nowrap !important; }
         .no-wrap-row > [class*="col"] { flex-shrink: 0; }
         #effectiveSpeedOutput:disabled { background-color: var(--bs-tertiary-bg); border-style: dashed; opacity: 0.8; cursor: not-allowed; font-weight: 500; }
-        /* Save Feedback Style */
-        #saveFeedback {
-            display: inline-block;
-            margin-left: 0.5rem;
-            font-size: 0.8em;
-            color: var(--bs-success);
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
-        #saveFeedback.show {
-            opacity: 1;
-        }
+        #saveFeedback { display: inline-block; margin-left: 0.5rem; font-size: 0.8em; color: var(--bs-success); opacity: 0; transition: opacity 0.5s ease-in-out; }
+        #saveFeedback.show { opacity: 1; }
     </style>
 </head>
 <body>
@@ -58,21 +49,15 @@
             </h5>
             <div class="row text-center result-grid g-1 no-wrap-row">
                 <div class="col result-item">
-                    <div class="result-header">
-                        <i class="bi bi-hourglass-split me-1"></i> 소요시간
-                    </div>
+                    <div class="result-header"><i class="bi bi-hourglass-split me-1"></i> 소요시간</div>
                     <div class="result-value" id="estimatedTime">-</div>
                 </div>
                 <div class="col result-item border-start border-end">
-                    <div class="result-header">
-                        <i class="bi bi-calendar-check me-1"></i> 완료시간
-                    </div>
+                    <div class="result-header"><i class="bi bi-calendar-check me-1"></i> 완료시간</div>
                     <div class="result-value" id="endTime">-</div>
                 </div>
                 <div class="col result-item">
-                    <div class="result-header">
-                        <i class="bi bi-clock-history me-1"></i> 남은시간
-                    </div>
+                    <div class="result-header"><i class="bi bi-clock-history me-1"></i> 남은시간</div>
                     <div class="result-value" id="remainingUntilEndTime">-</div>
                 </div>
             </div>
@@ -84,9 +69,10 @@
         </div>
 
         <div class="card mb-3 shadow-sm">
-            <div class="card-header"> <h6><i class="bi bi-battery-half me-2"></i>배터리 정보</h6>
-                <button class="btn btn-sm btn-outline-secondary p-1" id="saveBatteryInfoBtn" aria-label="배터리 정보 저장">
-                    <i class="bi bi-save"></i>
+            <div class="card-header">
+                <h6><i class="bi bi-battery-half me-2"></i>배터리 정보</h6>
+                <button class="btn btn-sm btn-outline-secondary" id="saveBatteryInfoBtn" aria-label="배터리 정보 저장">
+                    저장
                 </button>
             </div>
             <div class="card-body p-2">
@@ -120,9 +106,10 @@
         </div>
 
         <div class="card mb-3 shadow-sm">
-             <div class="card-header"> <h6><i class="bi bi-speedometer2 me-2"></i>충전 설정</h6>
-                 <button class="btn btn-sm btn-outline-secondary p-1" id="saveChargeSettingsBtn" aria-label="충전 설정 저장">
-                    <i class="bi bi-save"></i>
+             <div class="card-header">
+                <h6><i class="bi bi-speedometer2 me-2"></i>충전 설정</h6>
+                 <button class="btn btn-sm btn-outline-secondary" id="saveChargeSettingsBtn" aria-label="충전 설정 저장">
+                    저장
                 </button>
             </div>
             <div class="card-body p-2">
@@ -173,7 +160,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // === JavaScript 로직 (로컬 스토리지 기능 추가) ===
+        // === JavaScript 로직은 이전과 동일 ===
         const elements = {
             batteryCapacity: document.getElementById("batteryCapacity"),
             remainPercent: document.getElementById("remainPercent"),
@@ -198,17 +185,16 @@
             startTimeError: document.getElementById("startTimeError"),
             calculateBtn: document.getElementById("calculateBtn"),
             resetBtn: document.getElementById("resetBtn"),
-            saveBatteryInfoBtn: document.getElementById("saveBatteryInfoBtn"), // Added
-            saveChargeSettingsBtn: document.getElementById("saveChargeSettingsBtn"), // Added
-            saveFeedback: document.getElementById("saveFeedback") // Added
+            saveBatteryInfoBtn: document.getElementById("saveBatteryInfoBtn"),
+            saveChargeSettingsBtn: document.getElementById("saveChargeSettingsBtn"),
+            saveFeedback: document.getElementById("saveFeedback")
         };
 
         let isUpdating = false;
         let countdownInterval = null;
         let calculatedEndDate = null;
-        let feedbackTimeout = null; // For feedback message timeout
+        let feedbackTimeout = null;
 
-        // Local Storage Keys
         const LS_BATTERY_KEY = 'batteryCalculator_batteryInfo';
         const LS_SETTINGS_KEY = 'batteryCalculator_chargeSettings';
 
@@ -265,7 +251,7 @@
                 elements.targetError.innerText = "0 ~ 100%"; isValid = false;
             }
             if (!isNaN(remainKWh) && !isNaN(targetKWh) && remainKWh >= targetKWh && (elements.remainKWh.value || elements.targetKWh.value)) {
-                 if (!elements.targetError.innerText) elements.targetError.innerText = "목표 > 현재"; isValid = false;
+                 if (!elements.targetError.innerText) elements.targetError.innerText = "목표 용량이 현재 용량보다 커야 합니다."; isValid = false;
             }
 
             return isValid;
@@ -503,10 +489,6 @@
         }
 
         function resetForm() {
-            // Clear local storage for this form as well? Optional.
-            // localStorage.removeItem(LS_BATTERY_KEY);
-            // localStorage.removeItem(LS_SETTINGS_KEY);
-
             elements.batteryCapacity.value = "84";
             elements.remainPercent.value = "";
             elements.remainKWh.value = "";
@@ -551,21 +533,20 @@
 
         // --- Local Storage Functions ---
         function showSaveFeedback(message, type = "success") {
-             clearTimeout(feedbackTimeout); // Clear previous timeout if any
+             clearTimeout(feedbackTimeout);
              elements.saveFeedback.textContent = message;
-             elements.saveFeedback.className = `ms-2 fs-sm ${type === 'success' ? 'text-success' : 'text-info'}`; // Show with class
+             elements.saveFeedback.className = `ms-2 fs-sm ${type === 'success' ? 'text-success' : 'text-info'}`;
              elements.saveFeedback.classList.add('show');
-
              feedbackTimeout = setTimeout(() => {
                  elements.saveFeedback.classList.remove('show');
-             }, 2000); // Hide after 2 seconds
+             }, 2000);
         }
 
         function saveBatteryInfo() {
              const dataToSave = {
                  capacity: elements.batteryCapacity.value,
-                 remainPercent: elements.remainPercent.value, // Save %
-                 targetPercent: elements.targetPercent.value  // Save %
+                 remainPercent: elements.remainPercent.value,
+                 targetPercent: elements.targetPercent.value
              };
              try {
                  localStorage.setItem(LS_BATTERY_KEY, JSON.stringify(dataToSave));
@@ -580,7 +561,6 @@
              const dataToSave = {
                  speed: elements.chargeSpeed.value,
                  efficiency: elements.efficiency.value
-                 // Not saving start time preference currently
              };
              try {
                  localStorage.setItem(LS_SETTINGS_KEY, JSON.stringify(dataToSave));
@@ -599,7 +579,6 @@
                     elements.batteryCapacity.value = parsedData.capacity || "84";
                     elements.remainPercent.value = parsedData.remainPercent || "";
                     elements.targetPercent.value = parsedData.targetPercent || "";
-                    // kWh will be calculated by updateAll
                 }
 
                 const settingsData = localStorage.getItem(LS_SETTINGS_KEY);
@@ -611,8 +590,7 @@
             } catch (e) {
                  console.error("Error loading settings from Local Storage:", e);
             }
-            // After potentially loading values, update everything
-            updateAll();
+            updateAll(); // Load 후 모든 값 업데이트/계산
         }
 
         // --- Event Listeners ---
@@ -628,12 +606,11 @@
 
         elements.calculateBtn.addEventListener('click', updateTime);
         elements.resetBtn.addEventListener('click', resetForm);
-        elements.saveBatteryInfoBtn.addEventListener('click', saveBatteryInfo); // Added
-        elements.saveChargeSettingsBtn.addEventListener('click', saveChargeSettings); // Added
+        elements.saveBatteryInfoBtn.addEventListener('click', saveBatteryInfo);
+        elements.saveChargeSettingsBtn.addEventListener('click', saveChargeSettings);
 
         // --- Initial Load ---
         window.onload = () => {
-             // Add aria-describedby for accessibility
              elements.batteryCapacity.setAttribute('aria-describedby', 'batteryCapacityError');
              elements.remainPercent.setAttribute('aria-describedby', 'remainError');
              elements.remainKWh.setAttribute('aria-describedby', 'remainError');
@@ -643,8 +620,8 @@
              elements.efficiency.setAttribute('aria-describedby', 'efficiencyError');
              elements.startTime.setAttribute('aria-describedby', 'startTimeError');
 
-            loadSettings(); // Load saved settings first
-            handleUseCurrentTimeChange(); // Set initial start time based on checkbox AFTER loading potential saved values
+            loadSettings();
+            handleUseCurrentTimeChange();
             // updateAll(); // Called within loadSettings()
         };
     </script>
