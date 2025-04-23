@@ -8,50 +8,47 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body { font-size: 0.95rem; }
-        /* 전체 컨테이너 상하 패딩 최소화 */
         .container {
-             padding-top: 0.5rem; /* py-1 equivalent */
-             padding-bottom: 0.5rem; /* py-1 equivalent */
+             padding-top: 0.75rem; /* py-1.5 정도 */
+             padding-bottom: 0.75rem;
         }
-        /* 오류 메시지 스타일 */
         .error {
-            font-size: 0.75em; /* 폰트 더 줄임 */
+            font-size: 0.75em;
             margin-top: 0.1rem;
-            min-height: 0.9em; /* 최소 높이 더 줄임 */
+            min-height: 0.9em;
             display: block;
+            color: var(--bs-danger-text-emphasis); /* 오류 색상 강조 */
         }
-        /* 입력 그룹 (작은 크기 기본 사용) */
         .input-group-sm .form-control-sm {
-            min-width: 55px; /* 최소 너비 */
+            min-width: 55px;
         }
         .input-group .input-group-text {
             white-space: nowrap;
-            font-size: 0.8em; /* 단위 텍스트 크기 줄임 */
-            padding: 0.25rem 0.4rem; /* 패딩 조정 */
+            font-size: 0.8em;
+            padding: 0.25rem 0.4rem;
         }
-        /* = 구분자 스타일 */
         .equals-separator {
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--bs-secondary-color);
             font-weight: bold;
-            padding: 0 0.15rem; /* 패딩 약간 줄임 */
+            padding: 0 0.15rem;
             height: 100%;
         }
 
         /* 결과 섹션 */
         .result-section {
-            padding: 0.5rem !important; /* p-1 equivalent */
+            padding: 0.75rem !important; /* p-2 */
         }
         .result-item {
-            padding: 0.1rem 0.25rem; /* 패딩 더 줄임 */
+            padding: 0.15rem 0.3rem; /* 패딩 조정 */
         }
         .result-header {
-            font-size: 0.75rem; /* 폰트 더 줄임 */
+            font-size: 0.8rem; /* 약간 키움 */
             color: var(--bs-secondary-color);
-            margin-bottom: 0; /* 마진 제거 */
-            font-weight: bold;
+            margin-bottom: 0;
+            font-weight: 500; /* 보통 두께로 */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -59,59 +56,64 @@
             line-height: 1.1;
         }
         .result-value {
-            min-height: 1.7rem; /* 최소 높이 더 줄임 */
+            min-height: 1.8rem; /* 약간 늘림 */
             display: flex;
             align-items: center;
             justify-content: center;
             word-break: keep-all;
             overflow-wrap: break-word;
-            font-size: 1rem; /* 폰트 더 줄임 */
-            font-weight: 500; /* 약간 강조 */
+            font-size: 1.1rem; /* 결과 값 폰트 키움 */
+            font-weight: 500;
+            color: var(--bs-body-color); /* 기본 색상보다 약간 밝게 (테마 따라 조정) */
         }
         /* 진행 바 */
         .progress {
-            height: 1rem; /* 높이 더 줄임 */
-            margin-top: 0.5rem; /* mt-1 equivalent */
+            height: 1rem;
+            margin-top: 0.75rem; /* mt-2 */
             background-color: var(--bs-secondary-bg);
-            font-size: 0.7em; /* 내부 텍스트 크기 */
+            font-size: 0.7em;
         }
         .progress-bar {
             transition: width 0.3s ease-in-out;
         }
-        /* 카드 및 내부 요소 간격 최소화 */
+        /* 카드 및 내부 요소 간격 */
         .card {
-            margin-bottom: 0.75rem !important; /* mb-2 equivalent */
+            margin-bottom: 1rem !important; /* mb-3 */
         }
         .card .card-header {
-            padding: 0.3rem 0.5rem; /* 헤더 패딩 줄임 */
-            font-size: 0.9rem;
+            padding: 0.4rem 0.75rem; /* 패딩 약간 늘림 */
+            font-size: 0.95rem;
         }
         .card .card-body {
-            padding: 0.5rem; /* p-1 equivalent */
+            padding: 0.75rem; /* p-2 */
         }
-        .card .card-body .mb-1 { /* 내부 마진 mb-1 사용 */
-             margin-bottom: 0.25rem !important; /* mb-1 equivalent */
+        .card .card-body .mb-1 { /* 내부 마진 mb-1 유지 */
+             margin-bottom: 0.25rem !important;
+        }
+        .card .card-body .mb-2 { /* 내부 마진 mb-2 사용 */
+             margin-bottom: 0.5rem !important;
         }
          /* 라벨 */
         .form-label {
-            margin-bottom: 0.1rem; /* 라벨 마진 최소화 */
-            font-size: 0.8em; /* 라벨 폰트 크기 줄임 */
+            margin-bottom: 0.15rem; /* 마진 약간 늘림 */
+            font-size: 0.85em; /* 라벨 폰트 약간 키움 */
             font-weight: 500;
-            display: block; /* 줄바꿈 보장 */
-            white-space: nowrap; /* 라벨 자체 줄바꿈 방지 */
+            display: block;
+            white-space: nowrap;
         }
-        /* 체크박스 라벨 */
+        /* 체크박스 */
         .form-check-label {
-             font-size: 0.85em;
+             font-size: 0.9em;
         }
-        .form-check { margin-bottom: 0 !important; }
+        .form-check { margin-bottom: 0 !important; padding-left: 2em;}
+        .form-check .form-check-input { margin-left: -2em;}
 
         /* 줄바꿈 방지 스타일 */
         .no-wrap-row {
             flex-wrap: nowrap !important;
         }
         .no-wrap-row > [class*="col"] {
-            flex-shrink: 0; /* 컬럼 너비 자동 축소 방지 */
+            flex-shrink: 0;
         }
 
         /* 실제 속도 출력 필드 스타일 */
@@ -120,18 +122,18 @@
              border-style: dashed;
              opacity: 0.8;
              cursor: not-allowed;
+             font-weight: 500; /* 값 강조 */
         }
-
     </style>
 </head>
 <body>
-    <div class="container py-1">
-        <div class="mb-2 text-center">
+    <div class="container py-2">
+        <div class="mb-3 text-center">
             <h1 style="font-size: 1.8rem;"><i class="bi bi-ev-station-fill me-2"></i>배터리 충전 정보</h1>
         </div>
 
-        <div class="mb-2 p-1 border rounded shadow-sm bg-body-tertiary result-section">
-            <h5 class="text-center mb-1 border-bottom pb-1" style="font-size: 1rem;">
+        <div class="mb-3 p-2 border rounded shadow-sm bg-body-tertiary result-section">
+            <h5 class="text-center mb-2 border-bottom pb-1" style="font-size: 1rem;">
                 <i class="bi bi-check-circle-fill me-2 text-success"></i>예상 결과
             </h5>
             <div class="row text-center result-grid g-1 no-wrap-row">
@@ -154,57 +156,62 @@
                     <div class="result-value" id="remainingUntilEndTime">-</div>
                 </div>
             </div>
-            <div class="progress mt-1" role="progressbar" aria-label="현재 배터리 충전 상태" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress mt-2" role="progressbar" aria-label="현재 배터리 충전 상태" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                 <div class="progress-bar bg-success overflow-visible text-dark fw-bold" id="chargeProgress" style="width: 0%;">
                     <span id="progressText" class="visually-hidden">0%</span>
                 </div>
             </div>
         </div>
 
-        <div class="card mb-2 shadow-sm">
+        <div class="card mb-3 shadow-sm">
             <div class="card-header">
                 <h6><i class="bi bi-battery-half me-2"></i>배터리 정보</h6>
             </div>
-            <div class="card-body p-1">
-                <div class="mb-1"> <label for="batteryCapacity" class="form-label">배터리 총 용량 :</label> <div class="input-group input-group-sm">
-                        <input type="number" class="form-control form-control-sm" id="batteryCapacity" min="0" step="0.01" value="84" required aria-label="배터리 총 용량 (kWh)">
+            <div class="card-body p-2">
+                <div class="mb-2"> <label for="batteryCapacity" class="form-label">배터리 총 용량 :</label>
+                    <div class="input-group input-group-sm">
+                        <input type="number" class="form-control form-control-sm" id="batteryCapacity" min="0" step="0.01" value="84" required aria-label="배터리 총 용량 (kWh)" aria-describedby="batteryCapacityError">
                         <span class="input-group-text">kWh</span>
                     </div>
                     <div id="batteryCapacityError" class="error text-danger" aria-live="polite"></div>
                 </div>
-                <div class="mb-1"> <label class="form-label">현재 배터리 :</label> <div class="row g-1 align-items-center no-wrap-row">
-                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="remainPercent" min="0" max="100" step="0.01" required aria-label="현재 배터리 (%)"><span class="input-group-text">%</span></div></div>
+                <div class="mb-2"> <label class="form-label">현재 배터리 :</label>
+                    <div class="row g-1 align-items-center no-wrap-row">
+                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="remainPercent" min="0" max="100" step="0.01" required aria-label="현재 배터리 (%)" aria-describedby="remainError"><span class="input-group-text">%</span></div></div>
                         <div class="col-auto px-1"><span class="equals-separator">=</span></div>
-                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="remainKWh" min="0" step="0.01" required aria-label="현재 배터리 (kWh)"><span class="input-group-text">kWh</span></div></div>
+                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="remainKWh" min="0" step="0.01" required aria-label="현재 배터리 (kWh)" aria-describedby="remainError"><span class="input-group-text">kWh</span></div></div>
                     </div>
                     <div id="remainError" class="error text-danger" aria-live="polite"></div>
                 </div>
-                <div class="mb-0"> <label class="form-label">충전 목표 :</label> <div class="row g-1 align-items-center no-wrap-row">
-                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="targetPercent" min="0" max="100" step="0.01" required aria-label="충전 목표 (%)"><span class="input-group-text">%</span></div></div>
+                <div class="mb-0"> <label class="form-label">충전 목표 :</label>
+                     <div class="row g-1 align-items-center no-wrap-row">
+                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="targetPercent" min="0" max="100" step="0.01" required aria-label="충전 목표 (%)" aria-describedby="targetError"><span class="input-group-text">%</span></div></div>
                         <div class="col-auto px-1"><span class="equals-separator">=</span></div>
-                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="targetKWh" min="0" step="0.01" required aria-label="충전 목표 (kWh)"><span class="input-group-text">kWh</span></div></div>
+                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="targetKWh" min="0" step="0.01" required aria-label="충전 목표 (kWh)" aria-describedby="targetError"><span class="input-group-text">kWh</span></div></div>
                     </div>
                     <div id="targetError" class="error text-danger" aria-live="polite"></div>
                 </div>
             </div>
         </div>
 
-        <div class="card mb-2 shadow-sm">
+        <div class="card mb-3 shadow-sm">
             <div class="card-header">
                 <h6><i class="bi bi-speedometer2 me-2"></i>충전 설정</h6>
             </div>
-            <div class="card-body p-1">
-                <div class="row g-1 mb-1 align-items-end no-wrap-row speed-efficiency-row">
+            <div class="card-body p-2">
+                <div class="row g-2 mb-2 align-items-center no-wrap-row speed-efficiency-row">
                     <div class="col">
-                        <label for="chargeSpeed" class="form-label">충전 속도 :</label> <div class="input-group input-group-sm">
-                            <input type="number" class="form-control form-control-sm" id="chargeSpeed" min="0" step="0.01" required aria-label="충전 속도 (kW)">
+                        <label for="chargeSpeed" class="form-label">충전 속도 :</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control form-control-sm" id="chargeSpeed" min="0" step="0.01" required aria-label="충전 속도 (kW)" aria-describedby="chargeSpeedError">
                             <span class="input-group-text">kW</span>
                         </div>
                         <div id="chargeSpeedError" class="error text-danger" aria-live="polite"></div>
                     </div>
                     <div class="col">
-                        <label for="efficiency" class="form-label">충전 효율 (%) :</label> <div class="input-group input-group-sm">
-                            <input type="number" class="form-control form-control-sm" id="efficiency" min="1" max="100" step="0.1" value="90" required aria-label="충전 효율 (%)">
+                        <label for="efficiency" class="form-label">충전 효율 (%) :</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control form-control-sm" id="efficiency" min="1" max="100" step="0.1" value="90" required aria-label="충전 효율 (%)" aria-describedby="efficiencyError">
                             <span class="input-group-text">%</span>
                         </div>
                         <div id="efficiencyError" class="error text-danger" aria-live="polite"></div>
@@ -212,12 +219,14 @@
                      <div class="col-auto px-1"> <span class="equals-separator">=</span>
                      </div>
                     <div class="col">
-                         <label class="form-label">실제 속도:</label> <div class="input-group input-group-sm">
+                         <label class="form-label">실제 속도:</label>
+                         <div class="input-group input-group-sm">
                              <input type="text" class="form-control form-control-sm" id="effectiveSpeedOutput" readonly disabled aria-label="실제 충전 속도 (kW)">
                              <span class="input-group-text">kW</span>
                          </div>
                           <div class="error"></div> </div>
-                </div><div class="mb-1"> <label for="startTime" class="form-label">충전 시작 시간 :</label> <input type="time" class="form-control form-control-sm" id="startTime" required aria-label="충전 시작 시간 (HH:MM)">
+                </div><div class="mb-2"> <label for="startTime" class="form-label">충전 시작 시간 :</label>
+                    <input type="time" class="form-control form-control-sm" id="startTime" required aria-label="충전 시작 시간 (HH:MM)" aria-describedby="startTimeError">
                     <div id="startTimeError" class="error text-body-secondary" aria-live="polite"></div>
                 </div>
                 <div class="form-check mb-0">
@@ -237,7 +246,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // === JavaScript 로직은 이전과 동일하게 유지 ===
+        // === JavaScript 로직은 이전과 동일 ===
         const elements = {
             batteryCapacity: document.getElementById("batteryCapacity"),
             remainPercent: document.getElementById("remainPercent"),
@@ -301,27 +310,28 @@
             const remainPercent = parseFloat(elements.remainPercent.value);
             const targetPercent = parseFloat(elements.targetPercent.value);
 
+            // Use more descriptive error messages if space allows
             if (elements.batteryCapacity.value && (isNaN(capacity) || capacity <= 0)) {
-                elements.batteryCapacityError.innerText = "용량 > 0"; isValid = false;
+                elements.batteryCapacityError.innerText = "용량은 0보다 커야 합니다."; isValid = false;
             }
             if (elements.chargeSpeed.value && (isNaN(speed) || speed <= 0)) {
-                elements.chargeSpeedError.innerText = "속도 > 0"; isValid = false;
+                elements.chargeSpeedError.innerText = "속도는 0보다 커야 합니다."; isValid = false;
             }
             if (elements.efficiency.value && (isNaN(efficiency) || efficiency <= 0 || efficiency > 100)) {
-                elements.efficiencyError.innerText = "효율 1~100%"; isValid = false;
+                elements.efficiencyError.innerText = "효율은 1~100% 사이여야 합니다."; isValid = false;
             }
             if (elements.remainKWh.value && (isNaN(remainKWh) || remainKWh < 0 || (capacity > 0 && remainKWh > capacity))) {
-                elements.remainError.innerText = `kWh 0~${capacity || '?'}`; isValid = false;
+                elements.remainError.innerText = `0 ~ ${capacity || '?'} kWh 사이 값 입력`; isValid = false;
             } else if (elements.remainPercent.value && (isNaN(remainPercent) || remainPercent < 0 || remainPercent > 100)) {
-                elements.remainError.innerText = "% 0~100"; isValid = false;
+                elements.remainError.innerText = "0 ~ 100% 사이 값 입력"; isValid = false;
             }
             if (elements.targetKWh.value && (isNaN(targetKWh) || targetKWh < 0 || (capacity > 0 && targetKWh > capacity))) {
-                elements.targetError.innerText = `kWh 0~${capacity || '?'}`; isValid = false;
+                elements.targetError.innerText = `0 ~ ${capacity || '?'} kWh 사이 값 입력`; isValid = false;
             } else if (elements.targetPercent.value && (isNaN(targetPercent) || targetPercent < 0 || targetPercent > 100)) {
-                elements.targetError.innerText = "% 0~100"; isValid = false;
+                elements.targetError.innerText = "0 ~ 100% 사이 값 입력"; isValid = false;
             }
             if (!isNaN(remainKWh) && !isNaN(targetKWh) && remainKWh >= targetKWh && (elements.remainKWh.value || elements.targetKWh.value)) {
-                 if (!elements.targetError.innerText) elements.targetError.innerText = "목표 > 현재"; isValid = false;
+                 if (!elements.targetError.innerText) elements.targetError.innerText = "목표 용량이 현재 용량보다 커야 합니다."; isValid = false;
             }
 
             return isValid;
@@ -487,7 +497,7 @@
 
                         if (daysDiff > 0) {
                             const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"];
-                            endTimeString += ` (+${daysDiff}일, ${daysOfWeek[calculatedEndDate.getDay()]})`;
+                            endTimeString += ` (+${daysDiff}일, ${daysOfWeek[calculatedEndDate.getDay()]}요일)`;
                         }
 
                         elements.endTime.textContent = endTimeString;
@@ -614,6 +624,16 @@
         elements.resetBtn.addEventListener('click', resetForm);
 
         window.onload = () => {
+            // Add aria-describedby for accessibility after elements are loaded
+             elements.batteryCapacity.setAttribute('aria-describedby', 'batteryCapacityError');
+             elements.remainPercent.setAttribute('aria-describedby', 'remainError');
+             elements.remainKWh.setAttribute('aria-describedby', 'remainError');
+             elements.targetPercent.setAttribute('aria-describedby', 'targetError');
+             elements.targetKWh.setAttribute('aria-describedby', 'targetError');
+             elements.chargeSpeed.setAttribute('aria-describedby', 'chargeSpeedError');
+             elements.efficiency.setAttribute('aria-describedby', 'efficiencyError');
+             elements.startTime.setAttribute('aria-describedby', 'startTimeError');
+
             handleUseCurrentTimeChange();
             updateAll();
         };
