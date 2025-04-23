@@ -38,10 +38,9 @@
              .row > [class^="col-"] { margin-bottom: 0.5rem; }
              .row > [class^="col-"]:last-child { margin-bottom: 0; }
         }
-        /* Ensure countdown text is visible */
         #remainingUntilEndTime {
             font-style: italic;
-            color: var(--bs-primary); /* Make countdown stand out a bit */
+            color: var(--bs-primary);
         }
     </style>
 </head>
@@ -119,8 +118,16 @@
                     <div id="chargeSpeedError" class="error text-danger"></div>
                 </div>
                 <div class="mb-3">
-                    <label for="startTime" class="form-label">충전 시작 시간 :</label>
-                    <input type="time" class="form-control" id="startTime" oninput="updateTime()">
+                    <label for="startTime" class="form-label">충전 시작 시간 (HH:MM 형식):</label>
+                    
+                    <input type="text"
+                           class="form-control"
+                           id="startTime"
+                           inputmode="numeric"
+                           pattern="\d{2}:\d{2}"  /* Basic pattern hint */
+                           maxlength="5"         /* HH:MM */
+                           placeholder="HH:MM (예: 09:30 또는 21:00)"
+                           oninput="updateTime()"> 
                     <div id="startTimeError" class="error text-body-secondary"></div>
                 </div>
             </div>
@@ -156,10 +163,10 @@
         const targetPercentInput = document.getElementById("targetPercent");
         const targetKWhInput = document.getElementById("targetKWh");
         const chargeSpeedInput = document.getElementById("chargeSpeed");
-        const startTimeInput = document.getElementById("startTime");
+        const startTimeInput = document.getElementById("startTime"); // type="text" for HH:MM
         const estimatedTimeInput = document.getElementById("estimatedTime");
         const endTimeInput = document.getElementById("endTime");
-        const remainingUntilEndTimeInput = document.getElementById("remainingUntilEndTime"); // Added
+        const remainingUntilEndTimeInput = document.getElementById("remainingUntilEndTime");
 
         // --- Error Message Element References ---
         const batteryCapacityError = document.getElementById("batteryCapacityError");
@@ -169,62 +176,87 @@
         const startTimeError = document.getElementById("startTimeError");
 
         let isUpdating = false;
-        let countdownInterval = null; // Interval timer ID for countdown
-        let calculatedEndDate = null; // Store the calculated end date object
+        let countdownInterval = null;
+        let calculatedEndDate = null;
 
-        // --- Validation Function (Unchanged) ---
+        // --- Auto-format startTimeInput to HH:MM ---
+        function formatStartTimeInput() {
+            let value = startTimeInput.value.replace(/[^\d]/g, ""); // Remove non-digits
+            let formattedValue = "";
+
+            if (value.length > 4) {
+                value = value.substring(0, 4); // Limit to 4 digits (HHMM)
+            }
+
+            if (value.length >= 2) {
+                formattedValue = value.substring(0, 2) + ":" + value.substring(2);
+            } else {
+                formattedValue = value;
+            }
+
+            // Prevent exceeding HH:MM format (5 chars total) - redundant with maxlength but safer
+            if (formattedValue.length > 5) {
+                 formattedValue = formattedValue.substring(0, 5);
+            }
+
+            // Only update if the value actually changed to prevent cursor jumps
+            if (startTimeInput.value !== formattedValue) {
+                 startTimeInput.value = formattedValue;
+            }
+             // Trigger time update after formatting potentially changed the value
+             updateTime();
+        }
+        // Add event listener for auto-formatting
+        startTimeInput.addEventListener('input', formatStartTimeInput);
+
+
+        // --- Validation Function (Checks for HH:MM format) ---
         function validateInputs() {
             let isValid = true;
-            batteryCapacityError.innerText = "";
-            remainError.innerText = "";
-            targetError.innerText = "";
-            chargeSpeedError.innerText = "";
-            startTimeError.classList.remove("text-danger");
-            startTimeError.classList.add("text-body-secondary");
-            startTimeError.innerText = "";
+            batteryCapacityError.innerText = ""; remainError.innerText = ""; targetError.innerText = ""; chargeSpeedError.innerText = "";
+            startTimeError.innerText = ""; startTimeError.classList.remove("text-danger"); startTimeError.classList.add("text-body-secondary");
 
             const capacity = parseFloat(batteryCapacityInput.value);
-            const remainPercent = parseFloat(remainPercentInput.value);
-            const remainKWh = parseFloat(remainKWhInput.value);
-            const targetPercent = parseFloat(targetPercentInput.value);
-            const targetKWh = parseFloat(targetKWhInput.value);
+            const remainKWh = parseFloat(remainKWhInput.value); const targetKWh = parseFloat(targetKWhInput.value);
             const speed = parseFloat(chargeSpeedInput.value);
+            const startTimeValue = startTimeInput.value; // Format HH:MM
 
-            if (batteryCapacityInput.value && (isNaN(capacity) || capacity <= 0)) {
-                batteryCapacityError.innerText = "배터리 용량을 0보다 큰 숫자로 입력해주세요.";
-                isValid = false;
+            // Validate Battery Capacity & Speed
+            if (batteryCapacityInput.value && (isNaN(capacity) || capacity <= 0)) { batteryCapacityError.innerText = "배터리 용량을 0보다 큰 숫자로 입력해주세요."; isValid = false; }
+            if (chargeSpeedInput.value && (isNaN(speed) || speed <= 0)) { chargeSpeedError.innerText = "충전 속도를 0보다 큰 숫자로 입력해주세요."; isValid = false; }
+
+             // Validate Target > Remain
+            if (!isNaN(remainKWh) && !isNaN(targetKWh) && remainKWh >= targetKWh && (remainKWhInput.value || targetKWhInput.value)) {
+                if (!targetError.innerText) targetError.innerText = "충전 목표 용량은 남은 용량보다 커야 합니다.";
+                 isValid = false;
             }
-            if (remainKWhInput.value && (isNaN(remainKWh) || remainKWh < 0 || (!isNaN(capacity) && capacity > 0 && remainKWh > capacity))) {
-                 remainError.innerText = "남은 용량(kWh)을 0과 배터리 용량 사이의 숫자로 입력해주세요.";
-            } else if (remainPercentInput.value && (isNaN(remainPercent) || remainPercent < 0 || remainPercent > 100)) {
-                 remainError.innerText = "남은 용량(%)을 0과 100 사이의 숫자로 입력해주세요.";
-            } else {
-                 remainError.innerText = "";
-            }
-             if (targetKWhInput.value && (isNaN(targetKWh) || targetKWh < 0 || (!isNaN(capacity) && capacity > 0 && targetKWh > capacity))) {
-                 targetError.innerText = "목표 용량(kWh)을 0과 배터리 용량 사이의 숫자로 입력해주세요.";
-             } else if (targetPercentInput.value && (isNaN(targetPercent) || targetPercent < 0 || targetPercent > 100)) {
-                 targetError.innerText = "목표 용량(%)을 0과 100 사이의 숫자로 입력해주세요.";
-             } else {
-                  targetError.innerText = "";
-             }
-             if (!isNaN(remainKWh) && !isNaN(targetKWh) && remainKWh >= targetKWh && (remainKWhInput.value || targetKWhInput.value)) {
-                 if (!targetError.innerText) {
-                     targetError.innerText = "충전 목표 용량은 남은 용량보다 커야 합니다.";
-                 }
-             }
-            if (chargeSpeedInput.value && (isNaN(speed) || speed <= 0)) {
-                chargeSpeedError.innerText = "충전 속도를 0보다 큰 숫자로 입력해주세요.";
-                isValid = false;
+
+            // Validate Remaining/Target Ranges (Non-blocking errors)
+            const remainPercent = parseFloat(remainPercentInput.value); if (remainKWhInput.value && (isNaN(remainKWh) || remainKWh < 0 || (!isNaN(capacity) && capacity > 0 && remainKWh > capacity))) { remainError.innerText = "남은 용량(kWh)을 0과 배터리 용량 사이의 숫자로 입력해주세요."; } else if (remainPercentInput.value && (isNaN(remainPercent) || remainPercent < 0 || remainPercent > 100)) { remainError.innerText = "남은 용량(%)을 0과 100 사이의 숫자로 입력해주세요."; } else { remainError.innerText = ""; }
+            const targetPercent = parseFloat(targetPercentInput.value); if (targetKWhInput.value && (isNaN(targetKWh) || targetKWh < 0 || (!isNaN(capacity) && capacity > 0 && targetKWh > capacity))) { if (!targetError.innerText) targetError.innerText = "목표 용량(kWh)을 0과 배터리 용량 사이의 숫자로 입력해주세요."; } else if (targetPercentInput.value && (isNaN(targetPercent) || targetPercent < 0 || targetPercent > 100)) { if (!targetError.innerText) targetError.innerText = "목표 용량(%)을 0과 100 사이의 숫자로 입력해주세요."; } else { if (!targetError.innerText) targetError.innerText = ""; }
+
+            // HH:MM Validation for startTimeValue
+            if (startTimeValue) {
+                if (/^\d{2}:\d{2}$/.test(startTimeValue)) { // Check for HH:MM format
+                    const parts = startTimeValue.split(':');
+                    const hh = parseInt(parts[0], 10);
+                    const mm = parseInt(parts[1], 10);
+                    if (hh < 0 || hh > 23 || mm < 0 || mm > 59) {
+                        startTimeError.innerText = "시간은 00~23, 분은 00~59 사이여야 합니다.";
+                        startTimeError.classList.add("text-danger"); startTimeError.classList.remove("text-body-secondary");
+                        isValid = false;
+                    }
+                } else { // Invalid format
+                    startTimeError.innerText = "유효한 시간 형식(HH:MM)으로 입력해주세요.";
+                    startTimeError.classList.add("text-danger"); startTimeError.classList.remove("text-body-secondary");
+                    isValid = false;
+                }
             }
             return isValid;
         }
 
         // --- Helper Function (Unchanged) ---
-        function getBatteryCapacity() {
-            const capacity = parseFloat(batteryCapacityInput.value);
-            return (!isNaN(capacity) && capacity > 0) ? capacity : 0;
-        }
+        function getBatteryCapacity() { const capacity = parseFloat(batteryCapacityInput.value); return (!isNaN(capacity) && capacity > 0) ? capacity : 0; }
 
         // --- Update Functions for Remaining/Target Capacity (Unchanged) ---
         function updateRemainFromPercent() { if (isUpdating) return; isUpdating = true; const cap = getBatteryCapacity(); const percent = parseFloat(remainPercentInput.value); remainKWhInput.value = (!isNaN(percent) && percent >= 0 && percent <= 100 && cap > 0)? (Math.round((cap * percent / 100) * 100) / 100).toFixed(2): ''; updateTime(); isUpdating = false; }
@@ -233,172 +265,112 @@
         function updateTargetFromKWh() { if (isUpdating) return; isUpdating = true; const cap = getBatteryCapacity(); const kwh = parseFloat(targetKWhInput.value); targetPercentInput.value = (!isNaN(kwh) && kwh >= 0 && cap > 0 && kwh <= cap)? (Math.round((kwh / cap * 100) * 100) / 100).toFixed(2): ''; updateTime(); isUpdating = false; }
 
 
-        // --- Countdown Update Function ---
+        // --- Countdown Update Function (Unchanged) ---
         function updateCountdown() {
-            if (!calculatedEndDate) {
-                remainingUntilEndTimeInput.value = '';
-                remainingUntilEndTimeInput.placeholder = '-';
-                if(countdownInterval) clearInterval(countdownInterval); // Stop if no valid end date
-                countdownInterval = null;
-                return;
-            }
-
-            const now = new Date().getTime();
-            const diffMs = calculatedEndDate.getTime() - now;
-
-            if (diffMs <= 0) {
-                remainingUntilEndTimeInput.value = '완료됨';
-                remainingUntilEndTimeInput.placeholder = '완료됨';
-                if(countdownInterval) clearInterval(countdownInterval); // Stop countdown
-                countdownInterval = null;
+             if (!calculatedEndDate) { remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-'; if(countdownInterval) clearInterval(countdownInterval); countdownInterval = null; return; }
+            const now = new Date().getTime(); const diffMs = calculatedEndDate.getTime() - now;
+            if (diffMs <= 0) { remainingUntilEndTimeInput.value = '완료됨'; remainingUntilEndTimeInput.placeholder = '완료됨'; if(countdownInterval) clearInterval(countdownInterval); countdownInterval = null;
             } else {
-                const totalMinutesRemaining = Math.ceil(diffMs / (1000 * 60)); // Round up minutes
-                const hoursRemaining = Math.floor(totalMinutesRemaining / 60);
-                const minutesRemaining = totalMinutesRemaining % 60;
-
+                const totalMinutesRemaining = Math.ceil(diffMs / (1000 * 60)); const totalHoursRemaining = Math.floor(totalMinutesRemaining / 60); const daysRemaining = Math.floor(totalHoursRemaining / 24);
                 let remainingStr = "";
-                if (hoursRemaining > 0) {
-                    remainingStr += `${hoursRemaining}시간 `;
+                if (daysRemaining > 0) { const hoursInLastDay = totalHoursRemaining % 24; remainingStr = `${daysRemaining}일 `; if (hoursInLastDay > 0) { remainingStr += `${hoursInLastDay}시간 `; } remainingStr += "남음";
+                } else if (totalHoursRemaining >= 12) { remainingStr = `약 ${totalHoursRemaining}시간 남음`;
+                } else {
+                    const hoursRemaining = totalHoursRemaining; const minutesRemaining = totalMinutesRemaining % 60;
+                    if (hoursRemaining > 0) { remainingStr += `${hoursRemaining}시간 `; }
+                    if (minutesRemaining > 0 || hoursRemaining === 0) { remainingStr += `${minutesRemaining}분 남음`; }
+                    if (remainingStr === "" && diffMs > 0) { remainingStr = "곧 완료"; }
                 }
-                if (minutesRemaining > 0 || hoursRemaining === 0) { // Show minutes if hours are 0 or minutes > 0
-                     remainingStr += `${minutesRemaining}분 남음`;
-                }
-                 // Handle edge case where it's less than a minute
-                 if (remainingStr === "" && diffMs > 0) {
-                     remainingStr = "곧 완료";
-                 }
-
-                remainingUntilEndTimeInput.value = remainingStr;
-                remainingUntilEndTimeInput.placeholder = ''; // Remove placeholder when value exists
+                remainingUntilEndTimeInput.value = remainingStr; remainingUntilEndTimeInput.placeholder = '';
             }
         }
 
 
-        // --- Update Time Calculation (Duration, End Time, Start Countdown) ---
+        // --- Update Time Calculation (Parses HH:MM) ---
         function updateTime() {
-            // Clear previous results and stop existing countdown
-            estimatedTimeInput.value = '';
-            endTimeInput.value = '';
-            remainingUntilEndTimeInput.value = '';
-            remainingUntilEndTimeInput.placeholder = '-'; // Reset placeholder
-            calculatedEndDate = null; // Reset stored end date
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-                countdownInterval = null;
-            }
+            estimatedTimeInput.value = ''; endTimeInput.value = ''; remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-';
+            calculatedEndDate = null; if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+            // Clear previous error message before validation
+            startTimeError.innerText = ""; startTimeError.classList.remove("text-danger"); startTimeError.classList.add("text-body-secondary");
 
-            startTimeError.innerText = "";
-            startTimeError.classList.remove("text-danger");
-            startTimeError.classList.add("text-body-secondary");
 
-            if (!validateInputs()) {
-                // Validation errors displayed by validateInputs()
-            }
+            if (!validateInputs()) { // Run full validation
+                 calculatedEndDate = null; if (countdownInterval) clearInterval(countdownInterval); countdownInterval = null;
+                 estimatedTimeInput.value = ''; endTimeInput.value = '';
+                 remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-';
+                 return; // Stop if validation fails
+             }
 
-            const targetKWhVal = parseFloat(targetKWhInput.value);
-            const remainKWhVal = parseFloat(remainKWhInput.value);
+            const targetKWhVal = parseFloat(targetKWhInput.value); const remainKWhVal = parseFloat(remainKWhInput.value);
             const speed = parseFloat(chargeSpeedInput.value);
-            const startTimeValue = startTimeInput.value;
+            const startTimeValue = startTimeInput.value; // Validated HH:MM string or empty
 
-            // Check for valid calculation data
             if (isNaN(targetKWhVal) || isNaN(remainKWhVal) || isNaN(speed) || speed <= 0 || targetKWhVal <= remainKWhVal) {
-                 if (!startTimeValue && !isNaN(targetKWhVal) && !isNaN(remainKWhVal) && !isNaN(speed) && speed > 0 && targetKWhVal > remainKWhVal) {
-                    startTimeError.innerText = "시작 시간을 선택하면 완료 시간이 계산됩니다.";
-                 }
-                return; // Stop if data invalid
+                 if (!startTimeValue && !isNaN(targetKWhVal) && !isNaN(remainKWhVal) && !isNaN(speed) && speed > 0 && targetKWhVal > remainKWhVal) { startTimeError.innerText = "시작 시간을 입력하면 완료 시간이 계산됩니다."; }
+                return; // Stop if essential data missing (should be caught by validation)
             }
 
             // --- Calculate Duration ---
-            const neededEnergy = targetKWhVal - remainKWhVal;
-            const timeInHours = neededEnergy / speed;
-            const totalMinutesDuration = Math.round(timeInHours * 60);
+            const neededEnergy = targetKWhVal - remainKWhVal; const timeInHours = neededEnergy / speed; const totalMinutesDuration = Math.round(timeInHours * 60);
 
             if (totalMinutesDuration >= 0) {
-                const hours = Math.floor(totalMinutesDuration / 60);
-                const minutes = totalMinutesDuration % 60;
+                const hours = Math.floor(totalMinutesDuration / 60); const minutes = totalMinutesDuration % 60;
                 estimatedTimeInput.value = hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
 
-                // Calculate End Time if Start Time is valid
-                if (startTimeValue) {
+                // Calculate End Time if Start Time is provided and VALID
+                if (startTimeValue) { // It's already validated to be HH:MM format
                     try {
-                        const [startHour, startMinute] = startTimeValue.split(':').map(Number);
-                        if (!isNaN(startHour) && !isNaN(startMinute)) {
-                            const startDate = new Date();
-                            startDate.setHours(startHour, startMinute, 0, 0);
-                            // Store the calculated end date globally
+                        // Parse the validated HH:MM string
+                        const parts = startTimeValue.split(':');
+                        const startHour = parseInt(parts[0], 10);
+                        const startMinute = parseInt(parts[1], 10);
+
+                        if (!isNaN(startHour) && !isNaN(startMinute)) { // Should always be true here
+                            const startDate = new Date(); startDate.setHours(startHour, startMinute, 0, 0);
                             calculatedEndDate = new Date(startDate.getTime() + totalMinutesDuration * 60 * 1000);
 
-                            const endHour = calculatedEndDate.getHours().toString().padStart(2, '0');
-                            const endMinute = calculatedEndDate.getMinutes().toString().padStart(2, '0');
+                            const endHour = calculatedEndDate.getHours().toString().padStart(2, '0'); const endMinute = calculatedEndDate.getMinutes().toString().padStart(2, '0');
                             endTimeInput.value = `${endHour}:${endMinute}`;
-                            startTimeError.innerText = "";
+                            startTimeError.innerText = ""; // Clear info message
 
-                            // Start the countdown immediately and set interval
-                            updateCountdown(); // Initial display
-                            countdownInterval = setInterval(updateCountdown, 60000); // Update every minute
+                            updateCountdown();
+                            countdownInterval = setInterval(updateCountdown, 60000);
 
-                        } else {
-                            startTimeError.innerText = "유효한 시작 시간을 입력해주세요.";
-                            startTimeError.classList.add("text-danger");
-                            startTimeError.classList.remove("text-body-secondary");
-                            endTimeInput.value = '';
-                            // Ensure countdown is cleared if start time becomes invalid
-                            calculatedEndDate = null;
-                             if (countdownInterval) clearInterval(countdownInterval);
-                             countdownInterval = null;
-                             remainingUntilEndTimeInput.value = '';
-                             remainingUntilEndTimeInput.placeholder = '-';
-                        }
+                        } else { throw new Error("Failed to parse validated time string."); } // Should not happen
                     } catch (e) {
-                        console.error("Error parsing/calculating end time:", e);
-                        startTimeError.innerText = "완료 시간 계산 중 오류 발생.";
-                         startTimeError.classList.add("text-danger");
-                         startTimeError.classList.remove("text-body-secondary");
-                        endTimeInput.value = '';
-                        calculatedEndDate = null;
-                         if (countdownInterval) clearInterval(countdownInterval);
-                         countdownInterval = null;
-                         remainingUntilEndTimeInput.value = '';
-                         remainingUntilEndTimeInput.placeholder = '-';
+                        console.error("Error calculating end time with parsed HH:MM:", e);
+                        startTimeError.innerText = "완료 시간 계산 중 오류 발생."; startTimeError.classList.add("text-danger"); startTimeError.classList.remove("text-body-secondary");
+                        endTimeInput.value = ''; calculatedEndDate = null; if (countdownInterval) clearInterval(countdownInterval); countdownInterval = null; remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-';
                     }
                 } else {
                     // No start time provided
-                    endTimeInput.value = '';
-                    startTimeError.innerText = "시작 시간을 선택하면 완료 시간이 계산됩니다.";
-                     remainingUntilEndTimeInput.value = '';
-                     remainingUntilEndTimeInput.placeholder = '-';
-                     calculatedEndDate = null;
-                     if (countdownInterval) clearInterval(countdownInterval);
-                     countdownInterval = null;
+                    endTimeInput.value = ''; startTimeError.innerText = "시작 시간을 입력하면 완료 시간이 계산됩니다.";
+                     remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-'; calculatedEndDate = null; if (countdownInterval) clearInterval(countdownInterval); countdownInterval = null;
                 }
             } else {
-                estimatedTimeInput.value = '0분';
-                endTimeInput.value = startTimeValue || '';
-                 remainingUntilEndTimeInput.value = '';
-                 remainingUntilEndTimeInput.placeholder = '-';
-                 calculatedEndDate = null;
-                 if (countdownInterval) clearInterval(countdownInterval);
-                 countdownInterval = null;
+                estimatedTimeInput.value = '0분'; endTimeInput.value = '';
+                 remainingUntilEndTimeInput.value = ''; remainingUntilEndTimeInput.placeholder = '-'; calculatedEndDate = null; if (countdownInterval) clearInterval(countdownInterval); countdownInterval = null;
             }
         }
 
-        // --- Update All Function (when capacity changes - Unchanged) ---
+        // --- Update All Function (Unchanged) ---
         function updateAll() {
             const cap = getBatteryCapacity();
-            const remainPercent = parseFloat(remainPercentInput.value);
-            if (!isNaN(remainPercent) && remainPercent >= 0 && remainPercent <= 100 && cap > 0) { remainKWhInput.value = (Math.round((cap * remainPercent / 100) * 100) / 100).toFixed(2); } else if (remainPercentInput.value === '') { if(cap > 0) remainKWhInput.value = ''; }
-            const targetPercent = parseFloat(targetPercentInput.value);
-            if (!isNaN(targetPercent) && targetPercent >= 0 && targetPercent <= 100 && cap > 0) { targetKWhInput.value = (Math.round((cap * targetPercent / 100) * 100) / 100).toFixed(2); } else if (targetPercentInput.value === '') { if(cap > 0) targetKWhInput.value = ''; }
+            const remainPercent = parseFloat(remainPercentInput.value); if (!isNaN(remainPercent) && remainPercent >= 0 && remainPercent <= 100 && cap > 0) { remainKWhInput.value = (Math.round((cap * remainPercent / 100) * 100) / 100).toFixed(2); } else if (remainPercentInput.value === '') { if(cap > 0) remainKWhInput.value = ''; }
+            const targetPercent = parseFloat(targetPercentInput.value); if (!isNaN(targetPercent) && targetPercent >= 0 && targetPercent <= 100 && cap > 0) { targetKWhInput.value = (Math.round((cap * targetPercent / 100) * 100) / 100).toFixed(2); } else if (targetPercentInput.value === '') { if(cap > 0) targetKWhInput.value = ''; }
             updateTime();
         }
 
-        // --- Initial Load (Unchanged) ---
+        // --- Initial Load (Sets default HH:MM time) ---
          window.onload = () => {
             const now = new Date();
             const currentHour = now.getHours().toString().padStart(2, '0');
             const currentMinute = now.getMinutes().toString().padStart(2, '0');
-            if (!startTimeInput.value) { startTimeInput.value = `${currentHour}:${currentMinute}`; }
-            updateTime();
+            // Set default value in HH:MM format if input is empty
+            if (!startTimeInput.value) {
+               startTimeInput.value = `${currentHour}:${currentMinute}`;
+            }
+            updateTime(); // Perform initial calculation
          };
     </script>
 </body>
