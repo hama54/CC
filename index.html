@@ -12,7 +12,12 @@
         .container { padding-top: 0.75rem; padding-bottom: 0.75rem; }
         .error { font-size: 0.75em; margin-top: 0.1rem; min-height: 0.9em; display: block; color: var(--bs-danger-text-emphasis); }
         .input-group-sm .form-control-sm { min-width: 55px; }
-        .input-group .input-group-text { white-space: nowrap; font-size: 0.8em; padding: 0.25rem 0.4rem; }
+        /* Input group text 크기/패딩 조정 */
+        .input-group-sm > .input-group-text {
+             font-size: 0.8em;
+             padding: 0.25rem 0.4rem;
+        }
+        .input-group .input-group-text { white-space: nowrap; }
         .equals-separator { display: flex; align-items: center; justify-content: center; color: var(--bs-secondary-color); font-weight: bold; padding: 0 0.15rem; height: 100%; }
         .result-section { padding: 0.75rem !important; }
         .result-item { padding: 0.15rem 0.3rem; }
@@ -27,9 +32,6 @@
         .card .card-body .mb-1 { margin-bottom: 0.25rem !important; }
         .card .card-body .mb-2 { margin-bottom: 0.5rem !important; }
         .form-label { margin-bottom: 0.15rem; font-size: 0.85em; font-weight: 500; display: block; white-space: nowrap; }
-        .form-check-label { font-size: 0.9em; }
-        .form-check { margin-bottom: 0 !important; padding-left: 2em;}
-        .form-check .form-check-input { margin-left: -2em;}
         .no-wrap-row { flex-wrap: nowrap !important; }
         .no-wrap-row > [class*="col"] { flex-shrink: 0; }
         #effectiveSpeedOutput:disabled { background-color: var(--bs-tertiary-bg); border-style: dashed; opacity: 0.8; cursor: not-allowed; font-weight: 500; }
@@ -71,9 +73,7 @@
         <div class="card mb-3 shadow-sm">
             <div class="card-header">
                 <h6><i class="bi bi-battery-half me-2"></i>배터리 정보</h6>
-                <button class="btn btn-sm btn-outline-secondary" id="saveBatteryInfoBtn" aria-label="배터리 정보 저장">
-                    저장
-                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="saveBatteryInfoBtn" aria-label="배터리 정보 저장">저장</button>
             </div>
             <div class="card-body p-2">
                 <div class="mb-2">
@@ -108,9 +108,7 @@
         <div class="card mb-3 shadow-sm">
              <div class="card-header">
                 <h6><i class="bi bi-speedometer2 me-2"></i>충전 설정</h6>
-                 <button class="btn btn-sm btn-outline-secondary" id="saveChargeSettingsBtn" aria-label="충전 설정 저장">
-                    저장
-                </button>
+                 <button class="btn btn-sm btn-outline-secondary" id="saveChargeSettingsBtn" aria-label="충전 설정 저장">저장</button>
             </div>
             <div class="card-body p-2">
                 <div class="row g-2 mb-2 align-items-center no-wrap-row speed-efficiency-row">
@@ -139,17 +137,13 @@
                              <span class="input-group-text">kW</span>
                          </div>
                           <div class="error"></div> </div>
-                </div><div class="mb-2"> <label for="startTime" class="form-label">충전 시작 시간 :</label>
-                    <input type="time" class="form-control form-control-sm" id="startTime" required aria-label="충전 시작 시간 (HH:MM)" aria-describedby="startTimeError">
-                    <div id="startTimeError" class="error text-body-secondary" aria-live="polite"></div>
-                </div>
-                <div class="form-check mb-0">
-                    <input class="form-check-input" type="checkbox" id="useCurrentTime" checked>
-                    <label class="form-check-label" for="useCurrentTime">
-                        현재 시간 사용
-                    </label>
-                </div>
-            </div>
+                </div><div class="mb-0">
+                    <div class="input-group input-group-sm">
+                        <label for="startTime" class="input-group-text">충전 시작 시간 :</label>
+                        <input type="time" class="form-control form-control-sm" id="startTime" required aria-label="충전 시작 시간" aria-describedby="startTimeError"> <button class="btn btn-sm btn-outline-secondary" type="button" id="applyCurrentTimeBtn" aria-label="현재 시간 적용"> <i class="bi bi-clock-history me-1"></i> 현재 시간
+                        </button>
+                    </div>
+                     <div id="startTimeError" class="error text-body-secondary" aria-live="polite"></div> </div></div>
         </div>
 
         <div class="text-center mb-0">
@@ -171,7 +165,7 @@
             efficiency: document.getElementById("efficiency"),
             effectiveSpeedOutput: document.getElementById("effectiveSpeedOutput"),
             startTime: document.getElementById("startTime"),
-            useCurrentTime: document.getElementById("useCurrentTime"),
+            applyCurrentTimeBtn: document.getElementById("applyCurrentTimeBtn"), // Keep reference
             estimatedTime: document.getElementById("estimatedTime"),
             endTime: document.getElementById("endTime"),
             remainingUntilEndTime: document.getElementById("remainingUntilEndTime"),
@@ -198,20 +192,18 @@
         const LS_BATTERY_KEY = 'batteryCalculator_batteryInfo';
         const LS_SETTINGS_KEY = 'batteryCalculator_chargeSettings';
 
-        function debounce(fn, ms) {
+        function debounce(fn, ms) { /* ... */
             let timeoutId;
             return function(...args) {
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(() => fn.apply(this, args), ms);
             };
         }
-
-        function getBatteryCapacity() {
+        function getBatteryCapacity() { /* ... */
             const capacity = parseFloat(elements.batteryCapacity.value);
             return (!isNaN(capacity) && capacity > 0) ? capacity : 0;
-        }
-
-        function validateInputs() {
+         }
+        function validateInputs() { /* ... */
             let isValid = true;
             Object.keys(elements).forEach(key => {
                 if (key.endsWith("Error")) {
@@ -222,7 +214,6 @@
                     }
                 }
             });
-
             const capacity = parseFloat(elements.batteryCapacity.value);
             const remainKWh = parseFloat(elements.remainKWh.value);
             const targetKWh = parseFloat(elements.targetKWh.value);
@@ -253,34 +244,29 @@
             if (!isNaN(remainKWh) && !isNaN(targetKWh) && remainKWh >= targetKWh && (elements.remainKWh.value || elements.targetKWh.value)) {
                  if (!elements.targetError.innerText) elements.targetError.innerText = "목표 용량이 현재 용량보다 커야 합니다."; isValid = false;
             }
-
             return isValid;
-        }
-
-        function percentToKWh(percent) {
+         }
+        function percentToKWh(percent) { /* ... */
             const cap = getBatteryCapacity();
             return (!isNaN(percent) && percent >= 0 && percent <= 100 && cap > 0) ? (cap * percent / 100).toFixed(2) : '';
-        }
-        function kWhToPercent(kwh) {
+         }
+        function kWhToPercent(kwh) { /* ... */
             const cap = getBatteryCapacity();
             return (!isNaN(kwh) && kwh >= 0 && cap > 0 && kwh <= cap) ? (kwh / cap * 100).toFixed(2) : '';
-        }
-
-        function updateLinkedValue(sourceInput, targetInput, calculateFunc) {
+         }
+        function updateLinkedValue(sourceInput, targetInput, calculateFunc) { /* ... */
             if (isUpdating) return;
             isUpdating = true;
             const sourceValue = parseFloat(sourceInput.value);
             targetInput.value = calculateFunc(sourceValue);
             validateInputs();
             isUpdating = false;
-        }
-
+         }
         function handleRemainPercentChange() { updateLinkedValue(elements.remainPercent, elements.remainKWh, percentToKWh); updateTimeDebounced(); }
         function handleRemainKWhChange() { updateLinkedValue(elements.remainKWh, elements.remainPercent, kWhToPercent); updateTimeDebounced(); }
         function handleTargetPercentChange() { updateLinkedValue(elements.targetPercent, elements.targetKWh, percentToKWh); updateTimeDebounced(); }
         function handleTargetKWhChange() { updateLinkedValue(elements.targetKWh, elements.targetPercent, kWhToPercent); updateTimeDebounced(); }
-
-        function updateProgress() {
+        function updateProgress() { /* ... */
              let currentPercent = 0;
              const capacity = getBatteryCapacity();
              if (elements.remainPercent.value && !isNaN(parseFloat(elements.remainPercent.value))) {
@@ -299,9 +285,8 @@
                  elements.chargeProgress.textContent = "";
                  elements.progressText.textContent = `${progressRounded}%`;
              }
-        }
-
-        function updateEffectiveSpeed() {
+         }
+        function updateEffectiveSpeed() { /* ... */
             const speed = parseFloat(elements.chargeSpeed.value);
             const efficiencyPercent = parseFloat(elements.efficiency.value);
             let effectiveSpeedText = "-";
@@ -310,287 +295,128 @@
                 effectiveSpeedText = effectiveSpeed.toFixed(2);
             }
             elements.effectiveSpeedOutput.value = effectiveSpeedText;
-        }
-
-        function updateCountdown() {
-            if (countdownInterval) {
-                 cancelAnimationFrame(countdownInterval);
-                 clearTimeout(countdownInterval);
-                 countdownInterval = null;
-            }
-            if (!calculatedEndDate || isNaN(calculatedEndDate.getTime())) {
-                elements.remainingUntilEndTime.textContent = '-';
-                return;
-            }
+         }
+        function updateCountdown() { /* ... */
+            if (countdownInterval) { cancelAnimationFrame(countdownInterval); clearTimeout(countdownInterval); countdownInterval = null; }
+            if (!calculatedEndDate || isNaN(calculatedEndDate.getTime())) { elements.remainingUntilEndTime.textContent = '-'; return; }
             const now = new Date();
             const diffMs = calculatedEndDate.getTime() - now.getTime();
-
-            if (diffMs <= 0) {
-                elements.remainingUntilEndTime.textContent = '완료됨';
-                return;
-            }
-
+            if (diffMs <= 0) { elements.remainingUntilEndTime.textContent = '완료됨'; return; }
             const totalSeconds = Math.ceil(diffMs / 1000);
             const days = Math.floor(totalSeconds / (3600 * 24));
             const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
-
             let display = [];
             if (days > 0) display.push(`${days}일`);
             if (hours > 0 || days > 0) display.push(`${hours}시간`);
             if (minutes > 0 || hours > 0 || days > 0) display.push(`${minutes}분`);
             if (days === 0 && hours === 0 && minutes === 0) display.push(`${seconds}초`);
-
             elements.remainingUntilEndTime.textContent = display.join(' ') || '곧 완료';
-
-            if (totalSeconds <= 60) {
-                countdownInterval = requestAnimationFrame(updateCountdown);
-            } else {
-                const secondsToNextMinute = seconds === 0 ? 60 : seconds;
-                const timeoutMs = secondsToNextMinute * 1000;
-                countdownInterval = setTimeout(updateCountdown, timeoutMs);
-            }
-        }
-
-        function updateTime() {
+            if (totalSeconds <= 60) { countdownInterval = requestAnimationFrame(updateCountdown); } else { const secondsToNextMinute = seconds === 0 ? 60 : seconds; const timeoutMs = secondsToNextMinute * 1000; countdownInterval = setTimeout(updateCountdown, timeoutMs); }
+         }
+        function updateTime() { /* ... */
             elements.estimatedTime.textContent = '-';
             elements.endTime.textContent = '-';
             elements.remainingUntilEndTime.textContent = '-';
             calculatedEndDate = null;
-            if (countdownInterval) {
-                 cancelAnimationFrame(countdownInterval);
-                 clearTimeout(countdownInterval);
-                 countdownInterval = null;
-            }
-
+            if (countdownInterval) { cancelAnimationFrame(countdownInterval); clearTimeout(countdownInterval); countdownInterval = null; }
             updateEffectiveSpeed();
-
-            if (!validateInputs()) {
-                updateProgress();
-                return;
-            }
-
+            if (!validateInputs()) { updateProgress(); return; }
             const targetKWhVal = parseFloat(elements.targetKWh.value);
             const remainKWhVal = parseFloat(elements.remainKWh.value);
             const speed = parseFloat(elements.chargeSpeed.value);
             const efficiencyPercent = parseFloat(elements.efficiency.value);
             const startTimeValue = elements.startTime.value;
-
             if (isNaN(targetKWhVal) || isNaN(remainKWhVal) || isNaN(speed) || speed <= 0 || isNaN(efficiencyPercent) || targetKWhVal <= remainKWhVal) {
                 if (!startTimeValue && !isNaN(targetKWhVal) && !isNaN(remainKWhVal) && !isNaN(speed) && speed > 0 && !isNaN(efficiencyPercent) && targetKWhVal > remainKWhVal) {
-                     if (!elements.startTimeError.innerText.includes("입력하면")) {
-                        elements.startTimeError.innerText = "시작 시간 입력 시 완료 시간 계산";
-                        elements.startTimeError.classList.remove("text-danger");
-                        elements.startTimeError.classList.add("text-body-secondary");
-                     }
+                     if (!elements.startTimeError.innerText.includes("입력하면")) { elements.startTimeError.innerText = "시작 시간 입력 시 완료 시간 계산"; elements.startTimeError.classList.remove("text-danger"); elements.startTimeError.classList.add("text-body-secondary"); }
                 }
-                updateProgress();
-                return;
+                updateProgress(); return;
             }
-
             const neededEnergy = targetKWhVal - remainKWhVal;
             const timeInHours = neededEnergy / (speed * (efficiencyPercent / 100));
             const totalMinutesDuration = Math.ceil(timeInHours * 60);
-
             if (totalMinutesDuration >= 0) {
                 const hours = Math.floor(totalMinutesDuration / 60);
                 const minutes = totalMinutesDuration % 60;
                 elements.estimatedTime.textContent = hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
-
                 if (startTimeValue) {
                     try {
                         const [startHour, startMinute] = startTimeValue.split(':').map(Number);
                         if (startHour < 0 || startHour > 23 || startMinute < 0 || startMinute > 59) throw new Error("Invalid time value");
-
                         const startDate = new Date();
                         startDate.setHours(startHour, startMinute, 0, 0);
-
                         calculatedEndDate = new Date(startDate.getTime() + totalMinutesDuration * 60 * 1000);
-
                         const endDateOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
                         let endTimeString = calculatedEndDate.toLocaleTimeString('ko-KR', endDateOptions);
-
                         const startDay = new Date(startDate); startDay.setHours(0,0,0,0);
                         const endDay = new Date(calculatedEndDate); endDay.setHours(0,0,0,0);
                         const daysDiff = Math.round((endDay - startDay) / (1000 * 60 * 60 * 24));
-
-                        if (daysDiff > 0) {
-                            const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"];
-                            endTimeString += ` (+${daysDiff}일, ${daysOfWeek[calculatedEndDate.getDay()]})`;
-                        }
-
+                        if (daysDiff > 0) { const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"]; endTimeString += ` (+${daysDiff}일, ${daysOfWeek[calculatedEndDate.getDay()]})`; }
                         elements.endTime.textContent = endTimeString;
-                        elements.startTimeError.innerText = "";
-                        elements.startTimeError.classList.remove("text-danger");
-                        elements.startTimeError.classList.add("text-body-secondary");
-
+                        elements.startTimeError.innerText = ""; elements.startTimeError.classList.remove("text-danger"); elements.startTimeError.classList.add("text-body-secondary");
                         updateCountdown();
-
                     } catch (e) {
                         console.error("Error calculating end time:", e);
-                        elements.startTimeError.innerText = "완료 시간 계산 오류";
-                        elements.startTimeError.classList.add("text-danger");
-                        elements.startTimeError.classList.remove("text-body-secondary");
-                        elements.endTime.textContent = '-';
-                        elements.remainingUntilEndTime.textContent = '-';
-                        calculatedEndDate = null;
+                        elements.startTimeError.innerText = "완료 시간 계산 오류"; elements.startTimeError.classList.add("text-danger"); elements.startTimeError.classList.remove("text-body-secondary");
+                        elements.endTime.textContent = '-'; elements.remainingUntilEndTime.textContent = '-'; calculatedEndDate = null;
                          if (countdownInterval) { cancelAnimationFrame(countdownInterval); clearTimeout(countdownInterval); countdownInterval = null;}
                     }
                 } else {
-                    elements.endTime.textContent = '-';
-                    elements.remainingUntilEndTime.textContent = '-';
-                    calculatedEndDate = null;
+                    elements.endTime.textContent = '-'; elements.remainingUntilEndTime.textContent = '-'; calculatedEndDate = null;
                     if (countdownInterval) { cancelAnimationFrame(countdownInterval); clearTimeout(countdownInterval); countdownInterval = null;}
-                    if (!elements.startTimeError.classList.contains('text-danger') && !elements.startTimeError.innerText.includes("입력하면")) {
-                         elements.startTimeError.innerText = "시작 시간 입력 시 완료 시간 계산";
-                         elements.startTimeError.classList.remove("text-danger");
-                         elements.startTimeError.classList.add("text-body-secondary");
-                    }
+                    if (!elements.startTimeError.classList.contains('text-danger') && !elements.startTimeError.innerText.includes("입력하면")) { elements.startTimeError.innerText = "시작 시간 입력 시 완료 시간 계산"; elements.startTimeError.classList.remove("text-danger"); elements.startTimeError.classList.add("text-body-secondary"); }
                 }
             } else {
-                elements.estimatedTime.textContent = '0분';
-                elements.endTime.textContent = '-';
-                elements.remainingUntilEndTime.textContent = '-';
-                calculatedEndDate = null;
+                elements.estimatedTime.textContent = '0분'; elements.endTime.textContent = '-'; elements.remainingUntilEndTime.textContent = '-'; calculatedEndDate = null;
                 if (countdownInterval) { cancelAnimationFrame(countdownInterval); clearTimeout(countdownInterval); countdownInterval = null;}
             }
             updateProgress();
-        }
-
+         }
         const updateTimeDebounced = debounce(updateTime, 300);
-
-        function updateAll() {
+        function updateAll() { /* ... */
             const cap = getBatteryCapacity();
-             if (elements.remainPercent.value !== '') {
-                 const remainPercent = parseFloat(elements.remainPercent.value);
-                 if (!isNaN(remainPercent) && remainPercent >= 0 && remainPercent <= 100 && cap > 0) {
-                     elements.remainKWh.value = (cap * remainPercent / 100).toFixed(2);
-                 } else if (elements.remainPercent.value === '') {
-                     if(cap > 0) elements.remainKWh.value = '';
-                 }
-             } else if (elements.remainKWh.value !== '') {
-                 const kwh = parseFloat(elements.remainKWh.value);
-                 elements.remainPercent.value = kWhToPercent(kwh);
-             }
-             if (elements.targetPercent.value !== '') {
-                 const targetPercent = parseFloat(elements.targetPercent.value);
-                 if (!isNaN(targetPercent) && targetPercent >= 0 && targetPercent <= 100 && cap > 0) {
-                     elements.targetKWh.value = (cap * targetPercent / 100).toFixed(2);
-                 } else if (elements.targetPercent.value === '') {
-                     if(cap > 0) elements.targetKWh.value = '';
-                 }
-             } else if (elements.targetKWh.value !== '') {
-                 const kwh = parseFloat(elements.targetKWh.value);
-                 elements.targetPercent.value = kWhToPercent(kwh);
-             }
-            validateInputs();
-            updateTime();
+             if (elements.remainPercent.value !== '') { const p = parseFloat(elements.remainPercent.value); if (!isNaN(p) && p >= 0 && p <= 100 && cap > 0) { elements.remainKWh.value = (cap * p / 100).toFixed(2); } else if (elements.remainPercent.value === '') { if(cap > 0) elements.remainKWh.value = ''; } }
+             else if (elements.remainKWh.value !== '') { const k = parseFloat(elements.remainKWh.value); elements.remainPercent.value = kWhToPercent(k); }
+             if (elements.targetPercent.value !== '') { const p = parseFloat(elements.targetPercent.value); if (!isNaN(p) && p >= 0 && p <= 100 && cap > 0) { elements.targetKWh.value = (cap * p / 100).toFixed(2); } else if (elements.targetPercent.value === '') { if(cap > 0) elements.targetKWh.value = ''; } }
+             else if (elements.targetKWh.value !== '') { const k = parseFloat(elements.targetKWh.value); elements.targetPercent.value = kWhToPercent(k); }
+            validateInputs(); updateTime();
+         }
+        function resetForm() { /* ... */
+            elements.batteryCapacity.value = "84"; elements.remainPercent.value = ""; elements.remainKWh.value = ""; elements.targetPercent.value = ""; elements.targetKWh.value = ""; elements.chargeSpeed.value = ""; elements.efficiency.value = "90";
+            Object.keys(elements).forEach(key => { if (key.endsWith("Error")) { elements[key].innerText = ""; } });
+            elements.estimatedTime.textContent = '-'; elements.endTime.textContent = '-'; elements.remainingUntilEndTime.textContent = '-'; elements.effectiveSpeedOutput.value = "-";
+            calculatedEndDate = null; if (countdownInterval) { cancelAnimationFrame(countdownInterval); clearTimeout(countdownInterval); countdownInterval = null;}
+            applyCurrentTime(); updateProgress(); updateEffectiveSpeed(); showSaveFeedback("초기화 완료", "info");
         }
-
-        function resetForm() {
-            elements.batteryCapacity.value = "84";
-            elements.remainPercent.value = "";
-            elements.remainKWh.value = "";
-            elements.targetPercent.value = "";
-            elements.targetKWh.value = "";
-            elements.chargeSpeed.value = "";
-            elements.efficiency.value = "90";
-            elements.startTime.value = "";
-            elements.useCurrentTime.checked = true;
-
-             Object.keys(elements).forEach(key => {
-                if (key.endsWith("Error")) { elements[key].innerText = ""; }
-            });
-            elements.estimatedTime.textContent = '-';
-            elements.endTime.textContent = '-';
-            elements.remainingUntilEndTime.textContent = '-';
-            elements.effectiveSpeedOutput.value = "-";
-
-            calculatedEndDate = null;
-            if (countdownInterval) { cancelAnimationFrame(countdownInterval); clearTimeout(countdownInterval); countdownInterval = null;}
-
-            handleUseCurrentTimeChange();
-            updateProgress();
-            updateEffectiveSpeed();
-            showSaveFeedback("초기화 완료", "info");
-        }
-
-        function handleUseCurrentTimeChange() {
-            if (elements.useCurrentTime.checked) {
-                 elements.startTime.disabled = true;
-                 const now = new Date();
-                 elements.startTime.value = now.toLocaleTimeString('ko-KR', {
-                     hour: '2-digit',
-                     minute: '2-digit',
-                     hour12: false
-                 });
-            } else {
-                 elements.startTime.disabled = false;
-            }
-            updateTime();
-        }
+        // Removed handleUseCurrentTimeChange function
 
         // --- Local Storage Functions ---
-        function showSaveFeedback(message, type = "success") {
-             clearTimeout(feedbackTimeout);
-             elements.saveFeedback.textContent = message;
-             elements.saveFeedback.className = `ms-2 fs-sm ${type === 'success' ? 'text-success' : 'text-info'}`;
-             elements.saveFeedback.classList.add('show');
-             feedbackTimeout = setTimeout(() => {
-                 elements.saveFeedback.classList.remove('show');
-             }, 2000);
-        }
-
-        function saveBatteryInfo() {
-             const dataToSave = {
-                 capacity: elements.batteryCapacity.value,
-                 remainPercent: elements.remainPercent.value,
-                 targetPercent: elements.targetPercent.value
-             };
-             try {
-                 localStorage.setItem(LS_BATTERY_KEY, JSON.stringify(dataToSave));
-                 showSaveFeedback("배터리 정보 저장됨");
-             } catch (e) {
-                 console.error("Error saving battery info to Local Storage:", e);
-                 showSaveFeedback("저장 실패", "danger");
-             }
-        }
-
-        function saveChargeSettings() {
-             const dataToSave = {
-                 speed: elements.chargeSpeed.value,
-                 efficiency: elements.efficiency.value
-             };
-             try {
-                 localStorage.setItem(LS_SETTINGS_KEY, JSON.stringify(dataToSave));
-                 showSaveFeedback("충전 설정 저장됨");
-             } catch (e) {
-                 console.error("Error saving charge settings to Local Storage:", e);
-                  showSaveFeedback("저장 실패", "danger");
-             }
-        }
-
-        function loadSettings() {
+        function showSaveFeedback(message, type = "success") { /* ... */
+             clearTimeout(feedbackTimeout); elements.saveFeedback.textContent = message; elements.saveFeedback.className = `ms-2 fs-sm ${type === 'success' ? 'text-success' : 'text-info'}`; elements.saveFeedback.classList.add('show');
+             feedbackTimeout = setTimeout(() => { elements.saveFeedback.classList.remove('show'); }, 2000);
+         }
+        function saveBatteryInfo() { /* ... */
+             const d = { capacity: elements.batteryCapacity.value, remainPercent: elements.remainPercent.value, targetPercent: elements.targetPercent.value };
+             try { localStorage.setItem(LS_BATTERY_KEY, JSON.stringify(d)); showSaveFeedback("배터리 정보 저장됨"); } catch (e) { console.error("LS Save Err:", e); showSaveFeedback("저장 실패","danger");}
+         }
+        function saveChargeSettings() { /* ... */
+             const d = { speed: elements.chargeSpeed.value, efficiency: elements.efficiency.value };
+             try { localStorage.setItem(LS_SETTINGS_KEY, JSON.stringify(d)); showSaveFeedback("충전 설정 저장됨"); } catch (e) { console.error("LS Save Err:", e); showSaveFeedback("저장 실패","danger");}
+         }
+        function loadSettings() { /* ... */
             try {
-                const batteryData = localStorage.getItem(LS_BATTERY_KEY);
-                if (batteryData) {
-                    const parsedData = JSON.parse(batteryData);
-                    elements.batteryCapacity.value = parsedData.capacity || "84";
-                    elements.remainPercent.value = parsedData.remainPercent || "";
-                    elements.targetPercent.value = parsedData.targetPercent || "";
-                }
+                const bD = localStorage.getItem(LS_BATTERY_KEY); if (bD) { const d=JSON.parse(bD); elements.batteryCapacity.value = d.capacity||"84"; elements.remainPercent.value = d.remainPercent||""; elements.targetPercent.value = d.targetPercent||""; }
+                const sD = localStorage.getItem(LS_SETTINGS_KEY); if (sD) { const d=JSON.parse(sD); elements.chargeSpeed.value = d.speed||""; elements.efficiency.value = d.efficiency||"90"; }
+            } catch (e) { console.error("LS Load Err:", e); }
+         }
 
-                const settingsData = localStorage.getItem(LS_SETTINGS_KEY);
-                if (settingsData) {
-                    const parsedData = JSON.parse(settingsData);
-                    elements.chargeSpeed.value = parsedData.speed || "";
-                    elements.efficiency.value = parsedData.efficiency || "90";
-                }
-            } catch (e) {
-                 console.error("Error loading settings from Local Storage:", e);
-            }
-            updateAll(); // Load 후 모든 값 업데이트/계산
+        // --- New Function to Apply Current Time ---
+        function applyCurrentTime() {
+            const now = new Date();
+            elements.startTime.value = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+            updateTime(); // 시간 적용 후 즉시 재계산
         }
 
         // --- Event Listeners ---
@@ -602,7 +428,7 @@
         elements.chargeSpeed.addEventListener('input', updateTimeDebounced);
         elements.efficiency.addEventListener('input', updateTimeDebounced);
         elements.startTime.addEventListener('input', updateTime);
-        elements.useCurrentTime.addEventListener('change', handleUseCurrentTimeChange);
+        elements.applyCurrentTimeBtn.addEventListener('click', applyCurrentTime); // Added listener
 
         elements.calculateBtn.addEventListener('click', updateTime);
         elements.resetBtn.addEventListener('click', resetForm);
@@ -620,9 +446,20 @@
              elements.efficiency.setAttribute('aria-describedby', 'efficiencyError');
              elements.startTime.setAttribute('aria-describedby', 'startTimeError');
 
-            loadSettings();
-            handleUseCurrentTimeChange();
-            // updateAll(); // Called within loadSettings()
+            loadSettings(); // 저장된 설정 불러오기
+
+            // 현재 시간으로 시작 시간 초기 설정
+            const now = new Date();
+            // Check if startTime has a value (e.g., from future load implementation) before overwriting
+            if (!elements.startTime.value) {
+                elements.startTime.value = now.toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+            }
+
+            updateAll(); // 로드된 값과 기본 시작 시간으로 최종 계산 실행
         };
     </script>
 </body>
