@@ -1,56 +1,20 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>예상 배터리 잔량</title>
+    <title>목적지 도착 예상 배터리 잔량 및 주행 거리 계산기</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" data-bs-theme="dark">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         /* --- 기본 및 컨테이너 --- */
         body { font-size: 0.95rem; }
+        /* .container { padding-top: 1.5rem; padding-bottom: 1.5rem; } */
 
-        /* --- 텍스트 및 에러 --- */
+        /* --- 텍스트 및 에러/경고 --- */
         .error { font-size: 0.75em; margin-top: 0.2rem; min-height: 0.9em; display: block; color: var(--bs-danger-text-emphasis); }
+        .warning { font-size: 0.75em; margin-top: 0.2rem; min-height: 0.9em; display: block; color: var(--bs-warning-text-emphasis); }
+
 
         /* --- 입력 그룹 --- */
         .input-group-sm .form-control-sm { min-width: 55px; }
@@ -67,9 +31,8 @@
             margin-bottom: 1.5rem !important; /* mb-4 */
          }
         .result-section .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; } /* mb-3 */
-        .result-item { padding: 0.5rem 0.5rem; } /* py-2 px-2 */
-        .result-header { font-size: 0.8rem; color: var(--bs-secondary-color); margin-bottom: 0.25rem; font-weight: 500; display: flex; align-items: center; justify-content: center; white-space: nowrap; line-height: 1.1; }
-        .result-value { min-height: 1.8rem; display: flex; align-items: center; justify-content: center; word-break: keep-all; overflow-wrap: break-word; font-size: 1.15rem; font-weight: 500; color: var(--bs-body-color); }
+        /* 결과 항목 스타일 (필요 시 추가) */
+
 
         /* --- 카드 (기본 큰 화면 기준) --- */
         .card { margin-bottom: 1.5rem !important; } /* mb-4 */
@@ -83,7 +46,13 @@
         /* --- 유틸리티 --- */
         .no-wrap-row { flex-wrap: nowrap !important; }
         .no-wrap-row > [class*="col"] { flex-shrink: 0; }
-        #arrivalPercent:read-only, #arrivalKWh:read-only { background-color: var(--bs-tertiary-bg); border-style: dashed; opacity: 0.8; cursor: not-allowed; font-weight: 500; }
+        input[readonly].form-control-sm {
+            background-color: var(--bs-tertiary-bg) !important;
+            border-style: dashed !important;
+            opacity: 0.8 !important;
+            cursor: not-allowed !important;
+            font-weight: 500 !important;
+        }
         #saveFeedback { display: inline-block; margin-left: 0.5rem; font-size: 0.8em; opacity: 0; transition: opacity 0.5s ease-in-out; }
         #saveFeedback.show { opacity: 1; }
 
@@ -98,7 +67,6 @@
                 margin-bottom: 1rem !important; /* mb-3 */
             }
             .result-section .header { margin-bottom: 0.5rem; } /* mb-2 */
-            .result-item { padding-top: 0.25rem; padding-bottom: 0.25rem; } /* py-1 */
 
             .card { margin-bottom: 1rem !important; } /* mb-3 */
             .card .card-header { padding-top: 0.25rem; padding-bottom: 0.25rem; } /* py-1 */
@@ -111,7 +79,7 @@
 <body>
     <div class="container py-2 py-lg-3">
         <div class="mb-3 mb-lg-4 text-center">
-            <h1 style="font-size: 1.8rem;"><i class="bi bi-geo-alt-fill me-2"></i>예상 배터리 잔량</h1>
+            <h1 style="font-size: 1.8rem;"><i class="bi bi-geo-alt-fill me-2"></i>목적지 도착 예상 결과</h1>
         </div>
 
         <div class="border rounded shadow-sm bg-body-tertiary result-section">
@@ -124,24 +92,34 @@
                     <button class="btn btn-outline-secondary btn-sm" id="resetBtn"><i class="bi bi-arrow-counterclockwise me-1"></i> 초기화</button>
                 </div>
             </div>
-            <div class="mt-2"> <label class="form-label">목적지에 도착 후 배터리 잔량 :</label>
+            <div class="mt-2">
+                <label class="form-label">목적지 도착 후 예상 상태 :</label>
                 <div class="row g-1 align-items-center no-wrap-row">
                     <div class="col">
                         <div class="input-group input-group-sm">
-                            <input type="number" inputmode="decimal" class="form-control form-control-sm text-center" id="arrivalPercent" min="0" max="100" step="0.1" readonly aria-label="도착 시 예상 배터리 (%)" aria-describedby="arrivalError arrivalWarning">
+                            <input type="number" class="form-control form-control-sm text-center" id="arrivalPercent" min="0" max="100" step="0.1" readonly aria-label="도착 시 예상 배터리 (%)" aria-describedby="arrivalError arrivalWarning">
                             <span class="input-group-text">%</span>
                         </div>
                     </div>
                     <div class="col-auto px-1"><span class="equals-separator">=</span></div>
                     <div class="col">
                         <div class="input-group input-group-sm">
-                             <input type="number" inputmode="decimal" class="form-control form-control-sm text-center" id="arrivalKWh" min="0" step="0.1" readonly aria-label="도착 시 예상 배터리 (kWh)" aria-describedby="arrivalError arrivalWarning">
+                            <input type="number" class="form-control form-control-sm text-center" id="arrivalKWh" min="0" step="0.1" readonly aria-label="도착 시 예상 배터리 (kWh)" aria-describedby="arrivalError arrivalWarning">
                             <span class="input-group-text">kWh</span>
                         </div>
                     </div>
+                    <div class="col-auto px-1"><span class="equals-separator">=</span></div>
+                    <div class="col">
+                         <div class="input-group input-group-sm">
+                             <input type="number" class="form-control form-control-sm text-center" id="arrivalRange" min="0" step="0.1" readonly aria-label="도착 후 주행 가능 거리 (km)" aria-describedby="arrivalError arrivalWarning">
+                             <span class="input-group-text">km</span>
+                         </div>
+                    </div>
                 </div>
-                <div id="arrivalError" class="error text-danger" aria-live="polite"></div>
-                 <div id="arrivalWarning" class="error text-warning" aria-live="polite"></div> </div>
+
+                <div id="arrivalError" class="error" aria-live="polite"></div>
+                <div id="arrivalWarning" class="warning" aria-live="polite"></div>
+            </div>
         </div>
 
         <div class="card shadow-sm">
@@ -153,19 +131,19 @@
                 <div class="mb-2 mb-lg-3">
                     <label for="batteryCapacity" class="form-label">배터리 총 용량 :</label>
                     <div class="input-group input-group-sm">
-                        <input type="number" inputmode="decimal" class="form-control form-control-sm" id="batteryCapacity" min="0" step="0.01" required aria-label="배터리 총 용량 (kWh)" aria-describedby="batteryCapacityError">
+                        <input type="number" class="form-control form-control-sm" id="batteryCapacity" min="0" step="0.01" required aria-label="배터리 총 용량 (kWh)" aria-describedby="batteryCapacityError">
                         <span class="input-group-text">kWh</span>
                     </div>
-                    <div id="batteryCapacityError" class="error text-danger" aria-live="polite"></div>
+                    <div id="batteryCapacityError" class="error" aria-live="polite"></div>
                 </div>
                 <div class="mb-0">
                     <label class="form-label">현재 배터리 :</label>
                     <div class="row g-1 align-items-center no-wrap-row">
-                        <div class="col"><div class="input-group input-group-sm"><input type="number" inputmode="decimal" class="form-control form-control-sm" id="remainPercent" min="0" max="100" step="0.01" required aria-label="현재 배터리 (%)" aria-describedby="remainError"><span class="input-group-text">%</span></div></div>
+                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="remainPercent" min="0" max="100" step="0.01" required aria-label="현재 배터리 (%)" aria-describedby="remainError"><span class="input-group-text">%</span></div></div>
                         <div class="col-auto px-1"><span class="equals-separator">=</span></div>
-                        <div class="col"><div class="input-group input-group-sm"><input type="number" inputmode="decimal" class="form-control form-control-sm" id="remainKWh" min="0" step="0.01" required aria-label="현재 배터리 (kWh)" aria-describedby="remainError"><span class="input-group-text">kWh</span></div></div>
+                        <div class="col"><div class="input-group input-group-sm"><input type="number" class="form-control form-control-sm" id="remainKWh" min="0" step="0.01" required aria-label="현재 배터리 (kWh)" aria-describedby="remainError"><span class="input-group-text">kWh</span></div></div>
                     </div>
-                    <div id="remainError" class="error text-danger" aria-live="polite"></div>
+                    <div id="remainError" class="error" aria-live="polite"></div>
                 </div>
             </div>
         </div>
@@ -179,18 +157,18 @@
                 <div class="mb-2 mb-lg-3">
                     <label for="energyEfficiency" class="form-label">평균 전비 :</label>
                     <div class="input-group input-group-sm">
-                        <input type="number" inputmode="decimal" class="form-control form-control-sm" id="energyEfficiency" min="0.1" step="0.1" required aria-label="평균 전비 (km/kWh)" aria-describedby="energyEfficiencyError">
+                        <input type="number" class="form-control form-control-sm" id="energyEfficiency" min="0.1" step="0.1" required aria-label="평균 전비 (km/kWh)" aria-describedby="energyEfficiencyError">
                         <span class="input-group-text">km/kWh</span>
                     </div>
-                    <div id="energyEfficiencyError" class="error text-danger" aria-live="polite"></div>
+                    <div id="energyEfficiencyError" class="error" aria-live="polite"></div>
                 </div>
                 <div class="mb-0">
                     <label for="distanceToDest" class="form-label">목적지까지 남은 거리 :</label>
                     <div class="input-group input-group-sm">
-                        <input type="number" inputmode="decimal" class="form-control form-control-sm" id="distanceToDest" min="0" step="0.1" required aria-label="목적지까지 남은 거리 (km)" aria-describedby="distanceToDestError">
+                        <input type="number" class="form-control form-control-sm" id="distanceToDest" min="0" step="0.1" required aria-label="목적지까지 남은 거리 (km)" aria-describedby="distanceToDestError">
                         <span class="input-group-text">km</span>
                     </div>
-                    <div id="distanceToDestError" class="error text-danger" aria-live="polite"></div>
+                    <div id="distanceToDestError" class="error" aria-live="polite"></div>
                 </div>
             </div>
         </div>
@@ -224,6 +202,7 @@
             // 결과
             arrivalPercent: document.getElementById("arrivalPercent"),
             arrivalKWh: document.getElementById("arrivalKWh"),
+            arrivalRange: document.getElementById("arrivalRange"),
             arrivalError: document.getElementById("arrivalError"),
             arrivalWarning: document.getElementById("arrivalWarning"),
 
@@ -252,26 +231,19 @@
         // --- 상태 변수 ---
         let isUpdating = false; // % <=> kWh 변환 시 무한 루프 방지 플래그
         let feedbackTimeoutId = null; // 피드백 메시지 자동 숨김 타이머 ID
-        const inputValidity = { // 입력 유효성 상태 캐싱
-            batteryCapacity: false,
-            remainPercent: false,
-            remainKWh: false,
-            energyEfficiency: false,
-            distanceToDest: false
-        };
 
         // --- 유틸리티 함수 ---
         function debounce(fn, ms) {
             let timeoutId;
-            return function (...args) {
+            return function(...args) {
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(() => fn.apply(this, args), ms);
             };
         }
 
         function clamp(value, min, max) {
-            return Math.min(Math.max(value, min), max);
-        }
+             return Math.min(Math.max(value, min), max);
+         }
 
         function getBatteryCapacity() {
             const capacity = parseFloat(elements.batteryCapacity.value);
@@ -289,232 +261,160 @@
         }
 
         // --- 입력 유효성 검사 ---
-        function validateInput(field) {
+        function validateInputs() {
             let isValid = true;
-            const capacity = parseFloat(elements.batteryCapacity.value);
-            const remainKWh = parseFloat(elements.remainKWh.value);
-            const remainPercent = parseFloat(elements.remainPercent.value);
-            const efficiency = parseFloat(elements.energyEfficiency.value);
-            const distance = parseFloat(elements.distanceToDest.value);
-
-            // 개별 필드 검증
-            switch (field) {
-                case 'batteryCapacity':
-                    elements.batteryCapacityError.innerText = "";
-                    if (elements.batteryCapacity.value && (isNaN(capacity) || capacity <= 0)) {
-                        elements.batteryCapacityError.innerText = "용량은 0보다 커야 합니다.";
-                        isValid = false;
-                    }
-                    inputValidity.batteryCapacity = isValid;
-                    break;
-                case 'remainPercent':
-                case 'remainKWh':
-                    elements.remainError.innerText = "";
-                    if (elements.remainKWh.value && (isNaN(remainKWh) || remainKWh < 0 || (capacity > 0 && remainKWh > capacity))) {
-                        elements.remainError.innerText = `0 ~ ${capacity || '?'} kWh 범위 내여야 합니다.`;
-                        isValid = false;
-                    } else if (elements.remainPercent.value && (isNaN(remainPercent) || remainPercent < 0 || remainPercent > 100)) {
-                        elements.remainError.innerText = "0 ~ 100% 범위 내여야 합니다.";
-                        isValid = false;
-                    }
-                    inputValidity.remainPercent = isValid;
-                    inputValidity.remainKWh = isValid;
-                    break;
-                case 'energyEfficiency':
-                    elements.energyEfficiencyError.innerText = "";
-                    if (elements.energyEfficiency.value && (isNaN(efficiency) || efficiency <= 0)) {
-                        elements.energyEfficiencyError.innerText = "전비는 0보다 커야 합니다.";
-                        isValid = false;
-                    }
-                    inputValidity.energyEfficiency = isValid;
-                    break;
-                case 'distanceToDest':
-                    elements.distanceToDestError.innerText = "";
-                    if (elements.distanceToDest.value && (isNaN(distance) || distance < 0)) {
-                        elements.distanceToDestError.innerText = "거리는 0 이상이어야 합니다.";
-                        isValid = false;
-                    }
-                    inputValidity.distanceToDest = isValid;
-                    break;
-            }
-            return isValid;
-        }
-
-        function validateAllInputs() {
-            const fields = ['batteryCapacity', 'remainPercent', 'remainKWh', 'energyEfficiency', 'distanceToDest'];
-            let isValid = true;
-            fields.forEach(field => {
-                if (!validateInput(field)) {
-                    isValid = false;
+            // 입력 영역의 에러 메시지만 초기화
+            Object.keys(elements).forEach(key => {
+                 if ((key.endsWith("Error") || key.endsWith("Warning")) && !key.startsWith("arrival")) {
+                    elements[key].innerText = "";
                 }
             });
 
-            // 필수 입력값 확인
+
             const capacity = parseFloat(elements.batteryCapacity.value);
             const remainKWh = parseFloat(elements.remainKWh.value);
             const remainPercent = parseFloat(elements.remainPercent.value);
             const efficiency = parseFloat(elements.energyEfficiency.value);
             const distance = parseFloat(elements.distanceToDest.value);
 
+            // 개별 입력 필드 유효성 검사
+            if (elements.batteryCapacity.value && (isNaN(capacity) || capacity <= 0)) {
+                elements.batteryCapacityError.innerText = "용량은 0보다 커야 합니다."; isValid = false;
+            }
+            if (elements.remainKWh.value && (isNaN(remainKWh) || remainKWh < 0 || (capacity > 0 && remainKWh > capacity))) {
+                elements.remainError.innerText = `0 ~ ${capacity || '?'} kWh 범위 내여야 합니다.`; isValid = false;
+            } else if (elements.remainPercent.value && (isNaN(remainPercent) || remainPercent < 0 || remainPercent > 100)) {
+                elements.remainError.innerText = "0 ~ 100% 범위 내여야 합니다."; isValid = false;
+            }
+             if (elements.energyEfficiency.value && (isNaN(efficiency) || efficiency <= 0)) {
+                 elements.energyEfficiencyError.innerText = "전비는 0보다 커야 합니다."; isValid = false;
+             }
+             if (elements.distanceToDest.value && (isNaN(distance) || distance < 0)) {
+                 elements.distanceToDestError.innerText = "거리는 0 이상이어야 합니다."; isValid = false;
+             }
+
+            // 계산을 위한 필수 입력값 최종 확인
             if (isNaN(capacity) || capacity <= 0) {
-                elements.batteryCapacityError.innerText = "배터리 용량을 입력하세요.";
-                inputValidity.batteryCapacity = false;
+                if (!elements.batteryCapacityError.innerText) elements.batteryCapacityError.innerText = "배터리 용량을 입력하세요.";
                 isValid = false;
             }
             if ((isNaN(remainKWh) || remainKWh < 0) && (isNaN(remainPercent) || remainPercent < 0 || remainPercent > 100)) {
-                elements.remainError.innerText = "현재 배터리 잔량을 입력하세요.";
-                inputValidity.remainPercent = false;
-                inputValidity.remainKWh = false;
-                isValid = false;
+                 if (!elements.remainError.innerText) elements.remainError.innerText = "현재 배터리 잔량을 입력하세요.";
+                 isValid = false;
             }
             if (isNaN(efficiency) || efficiency <= 0) {
-                elements.energyEfficiencyError.innerText = "평균 전비를 입력하세요.";
-                inputValidity.energyEfficiency = false;
-                isValid = false;
+                 if (!elements.energyEfficiencyError.innerText) elements.energyEfficiencyError.innerText = "평균 전비를 입력하세요.";
+                 isValid = false;
             }
             if (isNaN(distance) || distance < 0) {
-                elements.distanceToDestError.innerText = "목적지 거리를 입력하세요.";
-                inputValidity.distanceToDest = false;
-                isValid = false;
+                 if (!elements.distanceToDestError.innerText) elements.distanceToDestError.innerText = "목적지 거리를 입력하세요.";
+                 isValid = false;
             }
 
             return isValid;
         }
 
         // --- UI 업데이트 함수 ---
-        function showSaveFeedback(message, type = "success") {
-            clearTimeout(feedbackTimeoutId);
-            elements.saveFeedback.textContent = message;
-            elements.saveFeedback.className = 'ms-2 fs-sm';
-            elements.saveFeedback.classList.add(`text-${type}`);
-            elements.saveFeedback.classList.add('show');
-            feedbackTimeoutId = setTimeout(() => {
-                elements.saveFeedback.classList.remove('show');
-            }, 2000);
-        }
+         function showSaveFeedback(message, type = "success") {
+             clearTimeout(feedbackTimeoutId);
+             elements.saveFeedback.textContent = message;
+             elements.saveFeedback.className = 'ms-2 fs-sm';
+             elements.saveFeedback.classList.add(`text-${type}`);
+             elements.saveFeedback.classList.add('show');
+
+             feedbackTimeoutId = setTimeout(() => {
+                 elements.saveFeedback.classList.remove('show');
+             }, 2000);
+         }
 
         // --- % <=> kWh 연동 핸들러 ---
-        function updateLinkedValue(sourceInput, targetInput, calculateFunc, sourceField) {
+        function updateLinkedValue(sourceInput, targetInput, calculateFunc) {
             if (isUpdating) return;
             isUpdating = true;
-
             const sourceValue = parseFloat(sourceInput.value);
             targetInput.value = calculateFunc(sourceValue);
-            validateInput(sourceField);
-            calculateAndDisplayArrivalDebounced();
-
+            validateInputs();
             isUpdating = false;
         }
+        function handleRemainPercentChange() { updateLinkedValue(elements.remainPercent, elements.remainKWh, percentToKWh); }
+        function handleRemainKWhChange() { updateLinkedValue(elements.remainKWh, elements.remainPercent, kWhToPercent); }
 
-        function handleRemainPercentChange() {
-            updateLinkedValue(elements.remainPercent, elements.remainKWh, percentToKWh, 'remainPercent');
-        }
-
-        function handleRemainKWhChange() {
-            updateLinkedValue(elements.remainKWh, elements.remainPercent, kWhToPercent, 'remainKWh');
-        }
 
         // --- 메인 계산 로직 ---
         function calculateAndDisplayArrival() {
+            // 결과 영역 메시지 초기화
             elements.arrivalError.innerText = "";
             elements.arrivalWarning.innerText = "";
 
-            if (!validateAllInputs()) {
-                elements.arrivalError.innerText = "계산 전에 입력값을 확인해주세요.";
-                elements.arrivalPercent.value = "-";
-                elements.arrivalKWh.value = "-";
+            // 유효성 검사 먼저 수행
+            if (!validateInputs()) {
+                 elements.arrivalError.innerText = "계산 전에 입력값을 확인해주세요.";
+                 elements.arrivalPercent.value = "-";
+                 elements.arrivalKWh.value = "-";
+                 elements.arrivalRange.value = "-";
                 return;
             }
 
+            // 유효성 검사 통과 후 값 가져오기
             const capacity = getBatteryCapacity();
             const currentKWh = parseFloat(elements.remainKWh.value);
             const efficiency = parseFloat(elements.energyEfficiency.value);
             const distance = parseFloat(elements.distanceToDest.value);
 
-            if (isNaN(currentKWh) || currentKWh < 0 || isNaN(efficiency) || efficiency <= 0 || isNaN(distance) || distance < 0) {
-                elements.arrivalError.innerText = "계산에 필요한 값이 유효하지 않습니다.";
-                elements.arrivalPercent.value = "-";
-                elements.arrivalKWh.value = "-";
-                return;
-            }
-
+            // 계산 수행
             const neededKWh = distance / efficiency;
             const estimatedArrivalKWh = currentKWh - neededKWh;
+            let estimatedArrivalRange = 0;
 
-            if (estimatedArrivalKWh < 0) {
-                elements.arrivalKWh.value = "0.00";
-                elements.arrivalPercent.value = "0.00";
-                elements.arrivalWarning.innerText = `도착 불가! 약 ${(-estimatedArrivalKWh).toFixed(2)} kWh 부족합니다.`;
-            } else if (estimatedArrivalKWh > capacity) {
-                elements.arrivalKWh.value = capacity.toFixed(2);
-                elements.arrivalPercent.value = "100.00";
-                elements.arrivalError.innerText = "현재 배터리 잔량이 총 용량보다 클 수 없습니다.";
-            } else {
-                elements.arrivalKWh.value = estimatedArrivalKWh.toFixed(2);
-                elements.arrivalPercent.value = kWhToPercent(estimatedArrivalKWh);
-            }
+             // 결과 표시
+             if (estimatedArrivalKWh < 0) { // 도착 불가
+                 elements.arrivalKWh.value = "0.00";
+                 elements.arrivalPercent.value = "0.00";
+                 elements.arrivalRange.value = "0.0";
+                 elements.arrivalWarning.innerText = `도착 불가! 약 ${(-estimatedArrivalKWh).toFixed(2)} kWh 부족합니다.`;
+             } else { // 정상 도착 또는 입력 오류(잔량>총량)
+                 // 도착 kWh 및 % 계산 (최대값은 capacity 및 100%)
+                 const finalArrivalKWh = Math.min(estimatedArrivalKWh, capacity);
+                 elements.arrivalKWh.value = finalArrivalKWh.toFixed(2);
+                 elements.arrivalPercent.value = kWhToPercent(finalArrivalKWh);
+
+                 // 도착 후 주행 가능 거리 계산
+                 estimatedArrivalRange = (efficiency > 0) ? (finalArrivalKWh * efficiency).toFixed(1) : "-";
+                 elements.arrivalRange.value = estimatedArrivalRange;
+
+                 // 입력 오류 체크 (현재 잔량이 총 용량보다 큰 경우)
+                 if (estimatedArrivalKWh > capacity) {
+                     elements.arrivalError.innerText = "주의: 현재 배터리 잔량이 총 용량보다 큽니다. 최대치 기준으로 계산합니다.";
+                 }
+             }
         }
 
-        const calculateAndDisplayArrivalDebounced = debounce(calculateAndDisplayArrival, DEBOUNCE_DELAY);
 
         // --- 데이터 저장/로드 ---
         function saveBatteryInfo() {
             const capacity = elements.batteryCapacity.value;
             const remainPercent = elements.remainPercent.value;
             if (!capacity || parseFloat(capacity) <= 0) {
-                showSaveFeedback("유효한 배터리 용량을 입력하세요.", "warning");
-                return;
+                 showSaveFeedback("유효한 배터리 용량을 입력하세요.", "warning"); return;
             }
-            if (remainPercent && (parseFloat(remainPercent) < 0 || parseFloat(remainPercent) > 100)) {
-                showSaveFeedback("유효한 현재 배터리(%)를 입력하세요.", "warning");
-                return;
-            }
-
-            const data = {
-                capacity: capacity,
-                remainPercent: remainPercent
-            };
-            try {
-                localStorage.setItem(LS_BATTERY_KEY, JSON.stringify(data));
-                showSaveFeedback("배터리 정보 저장됨", "success");
-            } catch (e) {
-                console.error("로컬 스토리지 저장 오류 (배터리 정보):", e);
-                if (e.name === 'QuotaExceededError') {
-                    showSaveFeedback("저장 공간이 부족합니다. 저장소를 정리해주세요.", "danger");
-                } else {
-                    showSaveFeedback("배터리 정보 저장 실패", "danger");
-                }
-            }
+             if (remainPercent && (parseFloat(remainPercent) < 0 || parseFloat(remainPercent) > 100)) {
+                 showSaveFeedback("유효한 현재 배터리(%)를 입력하세요.", "warning"); return;
+             }
+            const data = { capacity: capacity, remainPercent: remainPercent };
+            try { localStorage.setItem(LS_BATTERY_KEY, JSON.stringify(data)); showSaveFeedback("배터리 정보 저장됨", "success"); }
+            catch (e) { console.error("로컬 스토리지 저장 오류 (배터리 정보):", e); showSaveFeedback("배터리 정보 저장 실패", "danger"); }
         }
 
         function saveDrivingInfo() {
             const efficiency = elements.energyEfficiency.value;
             const distance = elements.distanceToDest.value;
-            if (!efficiency || parseFloat(efficiency) <= 0) {
-                showSaveFeedback("유효한 평균 전비를 입력하세요.", "warning");
-                return;
-            }
-            if (!distance || parseFloat(distance) < 0) {
-                showSaveFeedback("유효한 목적지 거리를 입력하세요.", "warning");
-                return;
-            }
-
-            const data = {
-                efficiency: efficiency,
-                distance: distance
-            };
-            try {
-                localStorage.setItem(LS_DRIVING_KEY, JSON.stringify(data));
-                showSaveFeedback("주행 정보 저장됨", "success");
-            } catch (e) {
-                console.error("로컬 스토리지 저장 오류 (주행 정보):", e);
-                if (e.name === 'QuotaExceededError') {
-                    showSaveFeedback("저장 공간이 부족합니다. 저장소를 정리해주세요.", "danger");
-                } else {
-                    showSaveFeedback("주행 정보 저장 실패", "danger");
-                }
-            }
+            if (!efficiency || parseFloat(efficiency) <= 0) { showSaveFeedback("유효한 평균 전비를 입력하세요.", "warning"); return; }
+            if (!distance || parseFloat(distance) < 0) { showSaveFeedback("유효한 목적지 거리를 입력하세요.", "warning"); return; }
+            const data = { efficiency: efficiency, distance: distance };
+            try { localStorage.setItem(LS_DRIVING_KEY, JSON.stringify(data)); showSaveFeedback("주행 정보 저장됨", "success"); }
+            catch (e) { console.error("로컬 스토리지 저장 오류 (주행 정보):", e); showSaveFeedback("주행 정보 저장 실패", "danger"); }
         }
+
 
         function loadSettings() {
             try {
@@ -524,9 +424,7 @@
                     elements.batteryCapacity.value = data.capacity || DEFAULT_CAPACITY;
                     elements.remainPercent.value = data.remainPercent || "";
                     handleRemainPercentChange();
-                } else {
-                    elements.batteryCapacity.value = DEFAULT_CAPACITY;
-                }
+                } else { elements.batteryCapacity.value = DEFAULT_CAPACITY; }
 
                 const drivingDataString = localStorage.getItem(LS_DRIVING_KEY);
                 if (drivingDataString) {
@@ -535,24 +433,13 @@
                     elements.distanceToDest.value = data.distance || "";
                 }
 
-                elements.arrivalPercent.value = "";
-                elements.arrivalKWh.value = "";
-                elements.arrivalError.innerText = "";
-                elements.arrivalWarning.innerText = "";
+                elements.arrivalPercent.value = ""; elements.arrivalKWh.value = ""; elements.arrivalRange.value = "";
+                elements.arrivalError.innerText = ""; elements.arrivalWarning.innerText = "";
+                validateInputs();
 
-                validateAllInputs();
-                calculateAndDisplayArrivalDebounced();
             } catch (e) {
                 console.error("로컬 스토리지 로드 오류:", e);
-                elements.batteryCapacity.value = DEFAULT_CAPACITY;
-                elements.remainPercent.value = "";
-                elements.remainKWh.value = "";
-                elements.energyEfficiency.value = "";
-                elements.distanceToDest.value = "";
-                elements.arrivalPercent.value = "";
-                elements.arrivalKWh.value = "";
-                elements.arrivalError.innerText = "";
-                elements.arrivalWarning.innerText = "";
+                resetForm();
                 showSaveFeedback("설정 로드 실패. 기본값 사용.", "warning");
             }
         }
@@ -560,19 +447,13 @@
         // --- 초기화 함수 ---
         function resetForm() {
             elements.batteryCapacity.value = DEFAULT_CAPACITY;
-            elements.remainPercent.value = "";
-            elements.remainKWh.value = "";
-            elements.energyEfficiency.value = "";
-            elements.distanceToDest.value = "";
-            elements.arrivalPercent.value = "";
-            elements.arrivalKWh.value = "";
-            elements.batteryCapacityError.innerText = "";
-            elements.remainError.innerText = "";
-            elements.energyEfficiencyError.innerText = "";
-            elements.distanceToDestError.innerText = "";
-            elements.arrivalError.innerText = "";
-            elements.arrivalWarning.innerText = "";
-            Object.keys(inputValidity).forEach(key => inputValidity[key] = false);
+            elements.remainPercent.value = ""; elements.remainKWh.value = "";
+            elements.energyEfficiency.value = ""; elements.distanceToDest.value = "";
+            elements.arrivalPercent.value = ""; elements.arrivalKWh.value = ""; elements.arrivalRange.value = "";
+
+            Object.keys(elements).forEach(key => {
+                if (key.endsWith("Error") || key.endsWith("Warning")) { elements[key].innerText = ""; }
+            });
             showSaveFeedback("입력값을 초기화했습니다.", "info");
         }
 
@@ -580,64 +461,29 @@
         elements.batteryCapacity.addEventListener('input', debounce(() => {
             if (elements.remainPercent.value) handleRemainPercentChange();
             else if (elements.remainKWh.value) handleRemainKWhChange();
-            validateInput('batteryCapacity');
-            calculateAndDisplayArrivalDebounced();
+            validateInputs();
         }, DEBOUNCE_DELAY));
-
         elements.remainPercent.addEventListener('input', debounce(handleRemainPercentChange, DEBOUNCE_DELAY));
         elements.remainKWh.addEventListener('input', debounce(handleRemainKWhChange, DEBOUNCE_DELAY));
-
-        elements.energyEfficiency.addEventListener('input', debounce(() => {
-            validateInput('energyEfficiency');
-            calculateAndDisplayArrivalDebounced();
-        }, DEBOUNCE_DELAY));
-
-        elements.distanceToDest.addEventListener('input', debounce(() => {
-            validateInput('distanceToDest');
-            calculateAndDisplayArrivalDebounced();
-        }, DEBOUNCE_DELAY));
+        elements.energyEfficiency.addEventListener('input', debounce(validateInputs, DEBOUNCE_DELAY));
+        elements.distanceToDest.addEventListener('input', debounce(validateInputs, DEBOUNCE_DELAY));
 
         elements.calculateArrivalBtn.addEventListener('click', calculateAndDisplayArrival);
         elements.resetBtn.addEventListener('click', resetForm);
         elements.saveBatteryInfoBtn.addEventListener('click', saveBatteryInfo);
         elements.saveDrivingInfoBtn.addEventListener('click', saveDrivingInfo);
 
-        elements.remainPercent.addEventListener('blur', () => {
-            const val = parseFloat(elements.remainPercent.value);
-            if (!isNaN(val)) {
-                elements.remainPercent.value = clamp(val, 0, 100).toFixed(2);
-            }
-            validateInput('remainPercent');
-        });
+        // Blur 이벤트 (값 보정)
+         elements.remainPercent.addEventListener('blur', () => { const v = parseFloat(elements.remainPercent.value); if (!isNaN(v)) elements.remainPercent.value = clamp(v, 0, 100).toFixed(2); });
+         elements.remainKWh.addEventListener('blur', () => { const v = parseFloat(elements.remainKWh.value); const cap = getBatteryCapacity(); if (!isNaN(v)) elements.remainKWh.value = clamp(v, 0, cap > 0 ? cap : Infinity).toFixed(2); });
+         elements.energyEfficiency.addEventListener('blur', () => { const v = parseFloat(elements.energyEfficiency.value); if (!isNaN(v)) elements.energyEfficiency.value = Math.max(0.1, v).toFixed(1); });
+         elements.distanceToDest.addEventListener('blur', () => { const v = parseFloat(elements.distanceToDest.value); if (!isNaN(v)) elements.distanceToDest.value = Math.max(0, v).toFixed(1); });
 
-        elements.remainKWh.addEventListener('blur', () => {
-            const val = parseFloat(elements.remainKWh.value);
-            const cap = getBatteryCapacity();
-            if (!isNaN(val)) {
-                elements.remainKWh.value = clamp(val, 0, cap > 0 ? cap : Infinity).toFixed(2);
-            }
-            validateInput('remainKWh');
-        });
-
-        elements.energyEfficiency.addEventListener('blur', () => {
-            const val = parseFloat(elements.energyEfficiency.value);
-            if (!isNaN(val)) {
-                elements.energyEfficiency.value = Math.max(0.1, val).toFixed(1);
-            }
-            validateInput('energyEfficiency');
-        });
-
-        elements.distanceToDest.addEventListener('blur', () => {
-            const val = parseFloat(elements.distanceToDest.value);
-            if (!isNaN(val)) {
-                elements.distanceToDest.value = Math.max(0, val).toFixed(1);
-            }
-            validateInput('distanceToDest');
-        });
 
         // 페이지 로드 시 초기화
         window.onload = () => {
-            elements.currentYearSpan.textContent = new Date().getFullYear();
+             elements.currentYearSpan.textContent = new Date().getFullYear();
+             // 접근성 설정
             elements.batteryCapacity.setAttribute('aria-describedby', 'batteryCapacityError');
             elements.remainPercent.setAttribute('aria-describedby', 'remainError');
             elements.remainKWh.setAttribute('aria-describedby', 'remainError');
@@ -645,6 +491,8 @@
             elements.distanceToDest.setAttribute('aria-describedby', 'distanceToDestError');
             elements.arrivalPercent.setAttribute('aria-describedby', 'arrivalError arrivalWarning');
             elements.arrivalKWh.setAttribute('aria-describedby', 'arrivalError arrivalWarning');
+            elements.arrivalRange.setAttribute('aria-describedby', 'arrivalError arrivalWarning');
+
             loadSettings();
         };
     </script>
