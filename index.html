@@ -204,6 +204,255 @@
             return (!isNaN(capacity) && capacity > 0) ? capacity : 0;
          }
         function validateInputs() { /* ... */
+            let isValid = true;<!DOCTYPE html>
+<html lang="ko" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>배터리 충전 정보 계산기</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" data-bs-theme="dark">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        /* 이전 CSS 스타일 유지 */
+        body { font-size: 0.95rem; }
+        .container { padding-top: 1rem; padding-bottom: 1rem; }
+        .error { font-size: 0.8em; margin-top: 0.15rem; min-height: 1em; display: block; color: var(--bs-danger-text-emphasis); }
+        .input-group-sm .form-control-sm { min-width: 55px; }
+        .input-group-sm > .input-group-text,
+        .input-group-sm > .form-control-sm,
+        .input-group-sm > .btn-sm { font-size: 0.875rem; padding: 0.25rem 0.5rem; }
+        .input-group .input-group-text { white-space: nowrap; }
+        .equals-separator { display: flex; align-items: center; justify-content: center; color: var(--bs-secondary-color); font-weight: bold; padding: 0 0.2rem; height: 100%; }
+        .result-section { padding: 0.75rem !important; }
+        .result-item { padding: 0.2rem 0.4rem; }
+        .result-header { font-size: 0.85rem; color: var(--bs-secondary-color); margin-bottom: 0.1rem; font-weight: 500; display: flex; align-items: center; justify-content: center; white-space: nowrap; line-height: 1.2; }
+        .result-value { min-height: 1.9rem; display: flex; align-items: center; justify-content: center; word-break: keep-all; overflow-wrap: break-word; font-size: 1.15rem; font-weight: 500; color: var(--bs-primary-text-emphasis); }
+        .progress { height: 1.1rem; margin-top: 0.75rem; background-color: var(--bs-secondary-bg); font-size: 0.7em; }
+        .progress-bar { transition: width 0.3s ease-in-out; }
+        .card { margin-bottom: 1rem !important; }
+        .card .card-header { padding: 0.5rem 0.75rem; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .card .card-header h6 { margin-bottom: 0; font-weight: 600;}
+        .card .card-body { padding: 0.75rem; }
+        .card .card-body > div:not(:last-child) { margin-bottom: 0.5rem !important; }
+        .card .card-body > .row:not(:last-child) { margin-bottom: 0.5rem !important; }
+        .form-label { margin-bottom: 0.2rem; font-size: 0.85em; font-weight: 500; display: block; white-space: nowrap; }
+        .no-wrap-row { flex-wrap: nowrap !important; }
+        .no-wrap-row > [class*="col-"] { flex-shrink: 0 !important; }
+        #effectiveSpeedOutput:disabled { background-color: var(--bs-tertiary-bg); border-style: dashed; opacity: 0.8; cursor: not-allowed; font-weight: 500; }
+        #saveFeedback { display: inline-block; margin-left: 0.5rem; font-size: 0.8em; color: var(--bs-success); opacity: 0; transition: opacity 0.5s ease-in-out; }
+        #saveFeedback.show { opacity: 1; }
+        /* Footer 스타일 */
+        footer { font-size: 0.8em; }
+        footer a { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container py-2">
+        <div class="mb-3 text-center">
+            <h1 style="font-size: 1.8rem;"><i class="bi bi-ev-station-fill me-2"></i>배터리 충전 정보</h1>
+        </div>
+
+        <div class="mb-3 p-2 border rounded shadow-sm bg-body-tertiary result-section">
+            <h5 class="text-center mb-2 border-bottom pb-1" style="font-size: 1rem;">
+                <i class="bi bi-check-circle-fill me-2 text-success"></i>예상 결과
+            </h5>
+            <div class="row text-center result-grid g-1 no-wrap-row">
+                <div class="col result-item">
+                    <div class="result-header"><i class="bi bi-hourglass-split me-1"></i> 소요시간</div>
+                    <div class="result-value" id="estimatedTime">-</div>
+                </div>
+                <div class="col result-item border-start border-end">
+                    <div class="result-header"><i class="bi bi-calendar-check me-1"></i> 완료시간</div>
+                    <div class="result-value" id="endTime">-</div>
+                </div>
+                <div class="col result-item">
+                    <div class="result-header"><i class="bi bi-clock-history me-1"></i> 남은시간</div>
+                    <div class="result-value" id="remainingUntilEndTime">-</div>
+                </div>
+            </div>
+            <div class="progress mt-2" role="progressbar" aria-label="현재 배터리 충전 상태" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar bg-success overflow-visible text-dark fw-bold" id="chargeProgress" style="width: 0%;">
+                    <span id="progressText" class="visually-hidden">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header">
+                <h6><i class="bi bi-battery-half me-2"></i>배터리 정보</h6>
+                <button class="btn btn-sm btn-outline-secondary" id="saveBatteryInfoBtn" aria-label="배터리 정보 저장">저장</button>
+            </div>
+            <div class="card-body p-2">
+                <div>
+                    <label for="batteryCapacity" class="form-label">배터리 총 용량</label>
+                    <div class="input-group input-group-sm">
+                        <input type="number" class="form-control form-control-sm" id="batteryCapacity" min="0" step="0.01" value="84" required aria-label="배터리 총 용량" aria-describedby="batteryCapacityError">
+                        <span class="input-group-text">kWh</span>
+                    </div>
+                    <div id="batteryCapacityError" class="error text-danger" aria-live="polite"></div>
+                </div>
+                <div>
+                    <label class="form-label">현재 배터리</label>
+                    <div class="row g-1 align-items-center no-wrap-row">
+                        <div class="col-5">
+                             <div class="input-group input-group-sm">
+                                 <input type="number" class="form-control form-control-sm" id="remainPercent" min="0" max="100" step="0.01" required aria-label="현재 배터리 퍼센트" aria-describedby="remainError">
+                                 <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                        <div class="col-auto px-1"><span class="equals-separator">=</span></div>
+                        <div class="col-5">
+                            <div class="input-group input-group-sm">
+                                <input type="number" class="form-control form-control-sm" id="remainKWh" min="0" step="0.01" required aria-label="현재 배터리 kWh" aria-describedby="remainError">
+                                <span class="input-group-text">kWh</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="remainError" class="error text-danger" aria-live="polite"></div>
+                </div>
+                <div>
+                    <label class="form-label">충전 목표</label>
+                     <div class="row g-1 align-items-center no-wrap-row">
+                         <div class="col-5">
+                             <div class="input-group input-group-sm">
+                                 <input type="number" class="form-control form-control-sm" id="targetPercent" min="0" max="100" step="0.01" required aria-label="충전 목표 퍼센트" aria-describedby="targetError">
+                                 <span class="input-group-text">%</span>
+                             </div>
+                         </div>
+                        <div class="col-auto px-1"><span class="equals-separator">=</span></div>
+                        <div class="col-5">
+                            <div class="input-group input-group-sm">
+                                <input type="number" class="form-control form-control-sm" id="targetKWh" min="0" step="0.01" required aria-label="충전 목표 kWh" aria-describedby="targetError">
+                                <span class="input-group-text">kWh</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="targetError" class="error text-danger" aria-live="polite"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3 shadow-sm">
+             <div class="card-header">
+                <h6><i class="bi bi-speedometer2 me-2"></i>충전 설정</h6>
+                 <button class="btn btn-sm btn-outline-secondary" id="saveChargeSettingsBtn" aria-label="충전 설정 저장">저장</button>
+            </div>
+            <div class="card-body p-2">
+                <div class="row g-2 align-items-center no-wrap-row speed-efficiency-row">
+                    <div class="col-4">
+                        <label for="chargeSpeed" class="form-label">충전 속도</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control form-control-sm" id="chargeSpeed" min="0" step="0.01" required aria-label="충전 속도" aria-describedby="chargeSpeedError">
+                            <span class="input-group-text">kW</span>
+                        </div>
+                        <div id="chargeSpeedError" class="error text-danger" aria-live="polite"></div>
+                    </div>
+                    <div class="col-3">
+                        <label for="efficiency" class="form-label">충전 효율</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control form-control-sm" id="efficiency" min="1" max="100" step="0.1" value="90" required aria-label="충전 효율" aria-describedby="efficiencyError">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div id="efficiencyError" class="error text-danger" aria-live="polite"></div>
+                    </div>
+                     <div class="col-auto d-flex align-self-end pb-1 px-1">
+                         <span class="equals-separator">=</span>
+                     </div>
+                    <div class="col-4">
+                         <label class="form-label">실제 속도</label>
+                         <div class="input-group input-group-sm">
+                             <input type="text" class="form-control form-control-sm" id="effectiveSpeedOutput" readonly disabled aria-label="실제 충전 속도">
+                             <span class="input-group-text">kW</span>
+                         </div>
+                          <div class="error"></div>
+                    </div>
+                </div>
+                <div>
+                    <label for="startTime" class="form-label">충전 시작 시간</label>
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                             <input type="time" class="form-control form-control-sm" id="startTime" required aria-label="충전 시작 시간" aria-describedby="startTimeError">
+                             <div id="startTimeError" class="error text-body-secondary" aria-live="polite"></div>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" id="applyCurrentTimeBtn" aria-label="현재 시간 적용">
+                                <i class="bi bi-clock-history me-1"></i> 현재 시간
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mb-0">
+            <button class="btn btn-primary btn-sm me-2" id="calculateBtn"><i class="bi bi-calculator me-1"></i> 계산</button>
+            <button class="btn btn-secondary btn-sm" id="resetBtn"><i class="bi bi-arrow-counterclockwise me-1"></i> 초기화</button>
+            <span id="saveFeedback"></span>
+        </div>
+
+    </div> <footer class="container text-center text-muted mt-4 pt-3 border-top">
+        <p><small>
+            Copyright &copy; 2025 오휴성
+            <br>
+            이 저작물은 <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">크리에이티브 커먼즈 저작자표시-비영리-변경금지 4.0 국제 라이선스</a>에 따라 이용할 수 있습니다.
+            <br>
+            <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">
+                <img alt="크리에이티브 커먼즈 라이선스" style="border-width:0; margin-top: 0.5rem;" src="https://i.creativecommons.org/l/by-nc-nd/4.0/88x31.png" />
+            </a>
+        </small></p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // === JavaScript 로직은 이전과 동일 ===
+        const elements = {
+            batteryCapacity: document.getElementById("batteryCapacity"),
+            remainPercent: document.getElementById("remainPercent"),
+            remainKWh: document.getElementById("remainKWh"),
+            targetPercent: document.getElementById("targetPercent"),
+            targetKWh: document.getElementById("targetKWh"),
+            chargeSpeed: document.getElementById("chargeSpeed"),
+            efficiency: document.getElementById("efficiency"),
+            effectiveSpeedOutput: document.getElementById("effectiveSpeedOutput"),
+            startTime: document.getElementById("startTime"),
+            applyCurrentTimeBtn: document.getElementById("applyCurrentTimeBtn"),
+            estimatedTime: document.getElementById("estimatedTime"),
+            endTime: document.getElementById("endTime"),
+            remainingUntilEndTime: document.getElementById("remainingUntilEndTime"),
+            chargeProgress: document.getElementById("chargeProgress"),
+            progressText: document.getElementById("progressText"),
+            batteryCapacityError: document.getElementById("batteryCapacityError"),
+            remainError: document.getElementById("remainError"),
+            targetError: document.getElementById("targetError"),
+            chargeSpeedError: document.getElementById("chargeSpeedError"),
+            efficiencyError: document.getElementById("efficiencyError"),
+            startTimeError: document.getElementById("startTimeError"),
+            calculateBtn: document.getElementById("calculateBtn"),
+            resetBtn: document.getElementById("resetBtn"),
+            saveBatteryInfoBtn: document.getElementById("saveBatteryInfoBtn"),
+            saveChargeSettingsBtn: document.getElementById("saveChargeSettingsBtn"),
+            saveFeedback: document.getElementById("saveFeedback")
+        };
+
+        let isUpdating = false;
+        let countdownInterval = null;
+        let calculatedEndDate = null;
+        let feedbackTimeout = null;
+
+        const LS_BATTERY_KEY = 'batteryCalculator_batteryInfo';
+        const LS_SETTINGS_KEY = 'batteryCalculator_chargeSettings';
+
+        function debounce(fn, ms) { /* ... */
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => fn.apply(this, args), ms);
+            };
+        }
+        function getBatteryCapacity() { /* ... */
+            const capacity = parseFloat(elements.batteryCapacity.value);
+            return (!isNaN(capacity) && capacity > 0) ? capacity : 0;
+         }
+        function validateInputs() { /* ... */
             let isValid = true;
             Object.keys(elements).forEach(key => {
                 if (key.endsWith("Error")) {
@@ -377,10 +626,10 @@
         const updateTimeDebounced = debounce(updateTime, 300);
         function updateAll() { /* ... */
             const cap = getBatteryCapacity();
-             if (elements.remainPercent.value !== '') { const p = parseFloat(elements.remainPercent.value); if (!isNaN(p) && p >= 0 && p <= 100 && cap > 0) { elements.remainKWh.value = (cap * p / 100).toFixed(2); } else if (elements.remainPercent.value === '') { if(cap > 0) elements.remainKWh.value = ''; } }
-             else if (elements.remainKWh.value !== '') { const k = parseFloat(elements.remainKWh.value); elements.remainPercent.value = kWhToPercent(k); }
-             if (elements.targetPercent.value !== '') { const p = parseFloat(elements.targetPercent.value); if (!isNaN(p) && p >= 0 && p <= 100 && cap > 0) { elements.targetKWh.value = (cap * p / 100).toFixed(2); } else if (elements.targetPercent.value === '') { if(cap > 0) elements.targetKWh.value = ''; } }
-             else if (elements.targetKWh.value !== '') { const k = parseFloat(elements.targetKWh.value); elements.targetPercent.value = kWhToPercent(k); }
+             if (elements.remainPercent.value !== '') { const p=parseFloat(elements.remainPercent.value); if (!isNaN(p) && p >= 0 && p <= 100 && cap > 0) { elements.remainKWh.value = (cap * p / 100).toFixed(2); } else if (elements.remainPercent.value === '') { if(cap > 0) elements.remainKWh.value = ''; } }
+             else if (elements.remainKWh.value !== '') { const k=parseFloat(elements.remainKWh.value); elements.remainPercent.value = kWhToPercent(k); }
+             if (elements.targetPercent.value !== '') { const p=parseFloat(elements.targetPercent.value); if (!isNaN(p) && p >= 0 && p <= 100 && cap > 0) { elements.targetKWh.value = (cap * p / 100).toFixed(2); } else if (elements.targetPercent.value === '') { if(cap > 0) elements.targetKWh.value = ''; } }
+             else if (elements.targetKWh.value !== '') { const k=parseFloat(elements.targetKWh.value); elements.targetPercent.value = kWhToPercent(k); }
             validateInputs(); updateTime();
          }
         function resetForm() { /* ... */
@@ -390,19 +639,18 @@
             calculatedEndDate = null; if (countdownInterval) { cancelAnimationFrame(countdownInterval); clearTimeout(countdownInterval); countdownInterval = null;}
             applyCurrentTime(); updateProgress(); updateEffectiveSpeed(); showSaveFeedback("초기화 완료", "info");
         }
-        // Removed handleUseCurrentTimeChange function
 
         // --- Local Storage Functions ---
-        function showSaveFeedback(message, type = "success") { /* ... */
+        function showSaveFeedback(message, type = "success") { /* ... (Using version with timeout) ... */
              clearTimeout(feedbackTimeout); elements.saveFeedback.textContent = message; elements.saveFeedback.className = `ms-2 fs-sm ${type === 'success' ? 'text-success' : 'text-info'}`; elements.saveFeedback.classList.add('show');
              feedbackTimeout = setTimeout(() => { elements.saveFeedback.classList.remove('show'); }, 2000);
          }
         function saveBatteryInfo() { /* ... */
-             const d = { capacity: elements.batteryCapacity.value, remainPercent: elements.remainPercent.value, targetPercent: elements.targetPercent.value };
+             const d = { capacity: elements.batteryCapacity.value, remainPercent: elements.remainPercent.value, targetPercent: elements.targetPercent.value }; // Capacity save added back
              try { localStorage.setItem(LS_BATTERY_KEY, JSON.stringify(d)); showSaveFeedback("배터리 정보 저장됨"); } catch (e) { console.error("LS Save Err:", e); showSaveFeedback("저장 실패","danger");}
          }
         function saveChargeSettings() { /* ... */
-             const d = { speed: elements.chargeSpeed.value, efficiency: elements.efficiency.value };
+             const d = { speed: elements.chargeSpeed.value, efficiency: elements.efficiency.value }; // Speed save added back
              try { localStorage.setItem(LS_SETTINGS_KEY, JSON.stringify(d)); showSaveFeedback("충전 설정 저장됨"); } catch (e) { console.error("LS Save Err:", e); showSaveFeedback("저장 실패","danger");}
          }
         function loadSettings() { /* ... */
@@ -411,6 +659,11 @@
                 const sD = localStorage.getItem(LS_SETTINGS_KEY); if (sD) { const d=JSON.parse(sD); elements.chargeSpeed.value = d.speed||""; elements.efficiency.value = d.efficiency||"90"; }
             } catch (e) { console.error("LS Load Err:", e); }
          }
+
+        // --- New Utility Function ---
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
 
         // --- New Function to Apply Current Time ---
         function applyCurrentTime() {
@@ -428,12 +681,51 @@
         elements.chargeSpeed.addEventListener('input', updateTimeDebounced);
         elements.efficiency.addEventListener('input', updateTimeDebounced);
         elements.startTime.addEventListener('input', updateTime);
-        elements.applyCurrentTimeBtn.addEventListener('click', applyCurrentTime); // Added listener
+        elements.applyCurrentTimeBtn.addEventListener('click', applyCurrentTime);
 
         elements.calculateBtn.addEventListener('click', updateTime);
         elements.resetBtn.addEventListener('click', resetForm);
         elements.saveBatteryInfoBtn.addEventListener('click', saveBatteryInfo);
         elements.saveChargeSettingsBtn.addEventListener('click', saveChargeSettings);
+
+        // --- New Blur Listeners ---
+        elements.efficiency.addEventListener('blur', () => {
+            const val = parseFloat(elements.efficiency.value);
+            if (!isNaN(val)) {
+                elements.efficiency.value = clamp(val, 1, 100).toFixed(1);
+                updateTimeDebounced();
+            } else if (elements.efficiency.value === '') {
+                 elements.efficiency.value = "90";
+                 updateTimeDebounced();
+            }
+        });
+
+        elements.targetPercent.addEventListener('blur', () => {
+            const t = parseFloat(elements.targetPercent.value);
+            const r = parseFloat(elements.remainPercent.value);
+            let clampedTarget = t;
+
+            if (!isNaN(t)) {
+                clampedTarget = clamp(t, 0, 100);
+                elements.targetPercent.value = clampedTarget.toFixed(2);
+            } else if (elements.targetPercent.value === '') { return; }
+             else { validateInputs(); return; }
+
+            if (!isNaN(clampedTarget) && !isNaN(r)) {
+                 if (clampedTarget <= r) {
+                     const correctedTarget = Math.min(r + 1, 100);
+                     elements.targetPercent.value = correctedTarget.toFixed(2);
+                     showSaveFeedback("목표는 현재보다 높아야 합니다 (자동 수정됨)", "info");
+                     handleTargetPercentChange();
+                 } else { handleTargetPercentChange(); }
+            } else { handleTargetPercentChange(); }
+        });
+
+        // --- New beforeunload Listener ---
+        // window.addEventListener("beforeunload", () => { // 주석 처리: 사용자가 원할 때만 저장하도록 변경
+        //     saveBatteryInfo();
+        //     saveChargeSettings();
+        // });
 
         // --- Initial Load ---
         window.onload = () => {
@@ -446,12 +738,10 @@
              elements.efficiency.setAttribute('aria-describedby', 'efficiencyError');
              elements.startTime.setAttribute('aria-describedby', 'startTimeError');
 
-            loadSettings(); // 저장된 설정 불러오기
+            loadSettings(); // Load saved settings
 
-            // 현재 시간으로 시작 시간 초기 설정
             const now = new Date();
-            // Check if startTime has a value (e.g., from future load implementation) before overwriting
-            if (!elements.startTime.value) {
+            if (!elements.startTime.value) { // Set time only if not loaded
                 elements.startTime.value = now.toLocaleTimeString('ko-KR', {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -459,7 +749,7 @@
                 });
             }
 
-            updateAll(); // 로드된 값과 기본 시작 시간으로 최종 계산 실행
+            updateAll(); // Update calculations
         };
     </script>
 </body>
